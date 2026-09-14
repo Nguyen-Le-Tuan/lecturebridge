@@ -4,6 +4,9 @@ LectureBridge is a local-first English-to-Vietnamese live caption prototype.
 An iPhone or iPad captures audio in Safari, while an Ubuntu laptop performs ASR and
 translation locally.
 
+New to the project? Read the Vietnamese, beginner-friendly walkthrough:
+[`docs/lecturebridge-explained-for-a-12-year-old.md`](docs/lecturebridge-explained-for-a-12-year-old.md).
+
 ```text
 iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> NLLB CPU -> EN/VI captions
 ```
