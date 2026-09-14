@@ -10,7 +10,7 @@ __pycache__/
 *.webm
 *.mp4
 models/
-data/
+data/private/
 outputs/
 benchmark-results/private/
 
