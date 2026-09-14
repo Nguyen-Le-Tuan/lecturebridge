@@ -1,11 +1,11 @@
 # LectureBridge classroom runbook
 
-This is the shortest supported procedure for the current one-iPhone MVP.
+This is the shortest supported procedure for the current one-device MVP.
 
 ## Before leaving for class
 
 1. Boot Ubuntu, connect power, provide ventilation, and prevent suspend.
-2. Connect the laptop and iPhone to Tailscale.
+2. Connect the laptop and iPhone/iPad to Tailscale.
 3. From the repository, run:
 
    ```bash
@@ -33,7 +33,7 @@ tailscale serve status
 If Tailscale prints an activation link, open it and enable Serve for this
 tailnet. Use the resulting `https://...ts.net` URL only. Never enable Funnel.
 
-## Start on iPhone
+## Start on iPhone or iPad
 
 1. Open the HTTPS tailnet URL in Safari.
 2. Allow microphone access for that site.
@@ -60,7 +60,7 @@ while the button still indicates recording.
 - Translation slow or failing: restart with
   `uv run lecturebridge-live --no-translation`.
 - ASR backlog or GPU pressure: restart with
-  `uv run lecturebridge-live --model tiny.en`.
+  `uv run lecturebridge-live --model base.en`, then use `tiny.en` if needed.
 - Page disconnected: tap Stop if possible, reload the page, then tap Start.
 - Server unavailable: verify Tailscale on both devices, then rerun preflight.
 - Port occupied by another service: stop that service; do not bind WLK publicly.

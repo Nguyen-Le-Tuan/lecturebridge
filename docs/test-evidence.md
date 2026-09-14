@@ -21,7 +21,8 @@ stored in the repository.
 | Model | Cold model load | Inference | RTF | Result |
 | --- | ---: | ---: | ---: | --- |
 | `tiny.en` | 25.00 s | 0.89 s | 0.011 | Pass, no OOM |
-| `base.en` | 55.15 s | 1.37 s | 0.016 | Pass, no OOM; selected default |
+| `base.en` | 55.15 s | 1.37 s | 0.016 | Pass, no OOM |
+| `small.en` | 62.73 s | 2.61 s | 0.031 | Pass, no OOM; selected default |
 
 The cold-load numbers include first-use download/cache work and are not steady
 state. Both results are far below the initial RTF target of 0.7.
@@ -38,10 +39,23 @@ state. Both results are far below the initial RTF target of 0.7.
 - The server process used approximately 3512 MiB VRAM during this test and did
   not OOM.
 
+## Upgraded live smoke test
+
+- `small.en` initially caused an OOM when NLLB auto-selected CUDA.
+- LectureBridge now forces the CTranslate2 NLLB translator onto CPU and keeps
+  Faster-Whisper on CUDA.
+- The health endpoint returned `ready: true` with `small.en` and translation.
+- A headless WebSocket test streamed the private 83.84-second recording at 4x
+  speed and received 222 responses, 213 non-empty updates, nine committed
+  lines, a non-empty English transcript, Vietnamese translation, and the final
+  `ready_to_stop` signal.
+- The live process used approximately 440 MiB VRAM after the completed test and
+  did not OOM.
+
 ## Still requiring a physical test
 
 - Safari microphone access through the Tailscale HTTPS URL.
-- Two-minute iPhone session with understandable EN and VI.
+- Two-minute iPhone/iPad session with understandable EN and VI.
 - Twenty-minute powered soak test.
 - Wi-Fi/cellular path representative of the classroom.
 

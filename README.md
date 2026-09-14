@@ -1,17 +1,17 @@
 # LectureBridge
 
 LectureBridge is a local-first English-to-Vietnamese live caption prototype.
-An iPhone captures audio in Safari, while an Ubuntu laptop performs ASR and
+An iPhone or iPad captures audio in Safari, while an Ubuntu laptop performs ASR and
 translation locally.
 
 ```text
-iPhone microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> NLLB CPU -> EN/VI captions
+iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> NLLB CPU -> EN/VI captions
 ```
 
 ## Current MVP
 
 - One microphone client and one session.
-- English transcription with `tiny.en` or `base.en` on NVIDIA CUDA.
+- English transcription with `small.en` by default on NVIDIA CUDA.
 - Vietnamese translation with NLLB-200 distilled 600M.
 - Browser UI supplied by pinned WhisperLiveKit `0.2.26`.
 - Tailnet-only access through Tailscale Serve; Funnel is not used.
@@ -22,7 +22,7 @@ iPhone microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> NLLB CPU -> EN/VI 
 - Ubuntu with an NVIDIA GPU and a working driver.
 - Python 3.12 managed by [`uv`](https://docs.astral.sh/uv/).
 - FFmpeg and Tailscale.
-- An iPhone signed into the same tailnet.
+- An iPhone or iPad signed into the same tailnet.
 - Permission to capture and process the audio source.
 
 ## Install and verify
@@ -44,6 +44,7 @@ directory and common audio formats are ignored by Git.
 ```bash
 uv run lecturebridge-transcribe data/private/english_test_30s.m4a
 uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model base.en
+uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model small.en --beam-size 5
 ```
 
 The command prints timestamped English text, model load time, inference time,
@@ -55,13 +56,14 @@ and real-time factor (RTF). Lower RTF is faster; the initial target is `< 0.7`.
 uv run lecturebridge-live
 ```
 
-Open <http://127.0.0.1:8000> for a local check. For iPhone use, follow
+Open <http://127.0.0.1:8000> for a local check. For iPhone/iPad use, follow
 [`docs/classroom-runbook.md`](docs/classroom-runbook.md).
 
 Fallbacks:
 
 ```bash
 uv run lecturebridge-live --model tiny.en
+uv run lecturebridge-live --model base.en
 uv run lecturebridge-live --no-translation
 ```
 

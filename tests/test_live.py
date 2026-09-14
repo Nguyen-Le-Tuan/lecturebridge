@@ -1,6 +1,8 @@
+import nllw
 import pytest
+import torch
 
-from lecturebridge.live import build_parser, build_wlk_command
+from lecturebridge.live import build_parser, build_wlk_command, force_nllb_cpu
 
 
 def test_live_defaults_are_local_and_translated() -> None:
@@ -16,10 +18,11 @@ def test_live_defaults_are_local_and_translated() -> None:
     assert command[command.index("--host") + 1] == "127.0.0.1"
     assert command[command.index("--backend") + 1] == "faster-whisper"
     assert command[command.index("--backend-policy") + 1] == "localagreement"
-    assert command[command.index("--model") + 1] == "base.en"
+    assert command[command.index("--model") + 1] == "small.en"
     assert command[command.index("--target-language") + 1] == "vi"
     assert command[command.index("--nllb-backend") + 1] == "ctranslate2"
     assert "--pcm-input" in command
+    assert "--beams" not in command
 
 
 def test_live_english_only_omits_translation_configuration() -> None:
@@ -40,3 +43,16 @@ def test_live_english_only_omits_translation_configuration() -> None:
 def test_live_parser_rejects_unknown_model() -> None:
     with pytest.raises(SystemExit):
         build_parser().parse_args(["--model", "large-v3"])
+
+
+def test_nllb_loader_is_forced_to_cpu_and_restores_torch_probe(monkeypatch) -> None:
+    original_probe = torch.cuda.is_available
+
+    def fake_load_model(*args: object, **kwargs: object) -> str:
+        return "cuda" if torch.cuda.is_available() else "cpu"
+
+    monkeypatch.setattr(nllw, "load_model", fake_load_model)
+    force_nllb_cpu()
+
+    assert nllw.load_model(["eng_Latn"]) == "cpu"
+    assert torch.cuda.is_available is original_probe

@@ -79,7 +79,7 @@ def tailscale_check() -> Check:
 
 def cache_check(root: Path) -> Check:
     hub = Path(HF_HUB_CACHE)
-    asr = hub / "models--Systran--faster-whisper-base.en"
+    asr = hub / "models--Systran--faster-whisper-small.en"
     translation_candidates = (
         root / "nllb-200-distilled-600M-ctranslate2",
         hub / "models--entai2965--nllb-200-distilled-600M-ctranslate2",

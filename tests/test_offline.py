@@ -3,12 +3,17 @@ from pathlib import Path
 import pytest
 
 from lecturebridge.offline import (
+    SUPPORTED_MODELS,
     TranscriptionResult,
     TranscriptSegment,
     calculate_rtf,
     format_timestamp,
     render_human,
 )
+
+
+def test_small_english_model_is_supported() -> None:
+    assert "small.en" in SUPPORTED_MODELS
 
 
 def test_calculate_rtf() -> None:

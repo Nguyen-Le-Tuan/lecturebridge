@@ -3,13 +3,30 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import sys
 from collections.abc import Sequence
 
 from lecturebridge.offline import SUPPORTED_MODELS
 from lecturebridge.runtime import ensure_cuda_runtime
+
+
+def force_nllb_cpu() -> None:
+    """Keep NLLB off the small GPU while Faster-Whisper uses CUDA."""
+    import nllw
+    import torch
+
+    original_load_model = nllw.load_model
+
+    def load_model_on_cpu(*args: object, **kwargs: object) -> object:
+        original_is_available = torch.cuda.is_available
+        torch.cuda.is_available = lambda: False
+        try:
+            return original_load_model(*args, **kwargs)
+        finally:
+            torch.cuda.is_available = original_is_available
+
+    nllw.load_model = load_model_on_cpu
 
 
 def build_wlk_command(
@@ -36,8 +53,6 @@ def build_wlk_command(
         "--lan",
         "en",
         "--pcm-input",
-        "--beams",
-        "1",
         "--pause-segmentation-seconds",
         "1.2",
         "--log-level",
@@ -66,8 +81,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model",
         choices=SUPPORTED_MODELS,
-        default="base.en",
-        help="ASR model (default: base.en)",
+        default="small.en",
+        help="ASR model (default: small.en)",
     )
     parser.add_argument(
         "--no-translation",
@@ -103,7 +118,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         port=args.port,
         translation_enabled=not args.no_translation,
     )
-    os.execvpe(command[0], command, os.environ)
+    if not args.no_translation:
+        force_nllb_cpu()
+
+    from whisperlivekit.cli import main as wlk_main
+
+    sys.argv = command
+    wlk_main()
     return 0
 
 

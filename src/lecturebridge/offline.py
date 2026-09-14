@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
-SUPPORTED_MODELS = ("tiny.en", "base.en")
+SUPPORTED_MODELS = ("tiny.en", "base.en", "small.en")
 
 
 @dataclass(frozen=True)
@@ -56,6 +56,7 @@ def transcribe_audio(
     model_name: str = "tiny.en",
     device: str = "cuda",
     compute_type: str = "int8_float16",
+    beam_size: int = 1,
 ) -> TranscriptionResult:
     """Transcribe an English audio file and collect baseline timings."""
     from faster_whisper import WhisperModel
@@ -71,7 +72,7 @@ def transcribe_audio(
     segment_stream, info = model.transcribe(
         str(audio_path),
         language="en",
-        beam_size=1,
+        beam_size=beam_size,
         vad_filter=True,
     )
     segments = [
@@ -142,6 +143,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="CTranslate2 compute type (default: int8_float16)",
     )
     parser.add_argument(
+        "--beam-size",
+        type=int,
+        choices=range(1, 6),
+        default=1,
+        metavar="1-5",
+        help="Number of decoding candidates for offline comparison (default: 1)",
+    )
+    parser.add_argument(
         "--json", action="store_true", help="Print machine-readable JSON"
     )
     return parser
@@ -162,6 +171,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             model_name=args.model,
             device=args.device,
             compute_type=args.compute_type,
+            beam_size=args.beam_size,
         )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
