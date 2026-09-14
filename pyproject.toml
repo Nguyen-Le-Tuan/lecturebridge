@@ -8,9 +8,11 @@ dependencies = [
     "faster-whisper>=1.2.1",
     "nvidia-cublas-cu12>=12,<13; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "nvidia-cudnn-cu12>=9,<10; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "whisperlivekit[translation]==0.2.26",
 ]
 
 [project.scripts]
+lecturebridge-live = "lecturebridge.live:main"
 lecturebridge-transcribe = "lecturebridge.offline:main"
 
 [build-system]
