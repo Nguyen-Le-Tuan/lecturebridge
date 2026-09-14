@@ -10,6 +10,7 @@ __pycache__/
 *.webm
 *.mp4
 models/
+nllb-200-distilled-600M-ctranslate2/
 data/private/
 outputs/
 benchmark-results/private/
