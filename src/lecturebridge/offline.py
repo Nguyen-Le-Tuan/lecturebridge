@@ -10,8 +10,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
-from faster_whisper import WhisperModel
-
 SUPPORTED_MODELS = ("tiny.en", "base.en")
 
 
@@ -60,6 +58,8 @@ def transcribe_audio(
     compute_type: str = "int8_float16",
 ) -> TranscriptionResult:
     """Transcribe an English audio file and collect baseline timings."""
+    from faster_whisper import WhisperModel
+
     if not audio_path.is_file():
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
@@ -148,6 +148,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    from lecturebridge.runtime import ensure_cuda_runtime
+
+    try:
+        ensure_cuda_runtime()
+    except RuntimeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
     args = build_parser().parse_args(argv)
     try:
         result = transcribe_audio(
