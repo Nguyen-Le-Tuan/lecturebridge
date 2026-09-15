@@ -5,22 +5,22 @@ import torch
 from lecturebridge.live import build_parser, build_wlk_command, force_nllb_cpu
 
 
-def test_live_defaults_are_local_and_translated() -> None:
+def test_live_defaults_are_local_and_english_only() -> None:
     args = build_parser().parse_args([])
     command = build_wlk_command(
         executable="wlk",
         model=args.model,
         port=args.port,
-        translation_enabled=not args.no_translation,
+        translation_enabled=args.translation,
     )
 
     assert command[:2] == ["wlk", "serve"]
     assert command[command.index("--host") + 1] == "127.0.0.1"
     assert command[command.index("--backend") + 1] == "faster-whisper"
     assert command[command.index("--backend-policy") + 1] == "localagreement"
-    assert command[command.index("--model") + 1] == "small.en"
-    assert command[command.index("--target-language") + 1] == "vi"
-    assert command[command.index("--nllb-backend") + 1] == "ctranslate2"
+    assert command[command.index("--model") + 1] == "distil-large-v3.5"
+    assert "--target-language" not in command
+    assert "--nllb-backend" not in command
     assert "--pcm-input" in command
     assert "--beams" not in command
 
@@ -38,6 +38,19 @@ def test_live_english_only_omits_translation_configuration() -> None:
     assert "--target-language" not in command
     assert "--translation-backend" not in command
     assert "--nllb-backend" not in command
+
+
+def test_live_translation_is_explicit_opt_in() -> None:
+    args = build_parser().parse_args(["--translation"])
+    command = build_wlk_command(
+        executable="wlk",
+        model=args.model,
+        port=args.port,
+        translation_enabled=args.translation,
+    )
+
+    assert command[command.index("--target-language") + 1] == "vi"
+    assert command[command.index("--nllb-backend") + 1] == "ctranslate2"
 
 
 def test_live_parser_rejects_unknown_model() -> None:

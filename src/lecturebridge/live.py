@@ -7,7 +7,7 @@ import shutil
 import sys
 from collections.abc import Sequence
 
-from lecturebridge.offline import SUPPORTED_MODELS
+from lecturebridge.models import DEFAULT_MODEL, SUPPORTED_MODELS
 from lecturebridge.runtime import ensure_cuda_runtime
 
 
@@ -76,18 +76,24 @@ def build_wlk_command(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run local English-to-Vietnamese live captions."
+        description="Run high-accuracy local English live captions."
     )
     parser.add_argument(
         "--model",
         choices=SUPPORTED_MODELS,
-        default="small.en",
-        help="ASR model (default: small.en)",
+        default=DEFAULT_MODEL,
+        help=f"ASR model (default: {DEFAULT_MODEL})",
     )
-    parser.add_argument(
+    translation = parser.add_mutually_exclusive_group()
+    translation.add_argument(
+        "--translation",
+        action="store_true",
+        help="Opt in to English-to-Vietnamese translation on CPU",
+    )
+    translation.add_argument(
         "--no-translation",
         action="store_true",
-        help="Run English-only captions if translation is unavailable or too slow",
+        help="Deprecated compatibility alias; English-only is already the default",
     )
     parser.add_argument(
         "--port", type=int, default=8000, help="Loopback port (default: 8000)"
@@ -112,13 +118,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("error: WhisperLiveKit is unavailable; run `uv sync` first", file=sys.stderr)
         return 1
 
+    if args.no_translation:
+        print(
+            "warning: --no-translation is deprecated; English-only is now the default",
+            file=sys.stderr,
+        )
+
     command = build_wlk_command(
         executable=executable,
         model=args.model,
         port=args.port,
-        translation_enabled=not args.no_translation,
+        translation_enabled=args.translation,
     )
-    if not args.no_translation:
+    if args.translation:
         force_nllb_cpu()
 
     from whisperlivekit.cli import main as wlk_main

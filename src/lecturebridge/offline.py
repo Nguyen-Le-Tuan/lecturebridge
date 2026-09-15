@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
-SUPPORTED_MODELS = ("tiny.en", "base.en", "small.en")
+from lecturebridge.models import DEFAULT_MODEL, SUPPORTED_MODELS
 
 
 @dataclass(frozen=True)
@@ -53,10 +53,10 @@ def format_timestamp(seconds: float) -> str:
 def transcribe_audio(
     audio_path: Path,
     *,
-    model_name: str = "tiny.en",
+    model_name: str = DEFAULT_MODEL,
     device: str = "cuda",
     compute_type: str = "int8_float16",
-    beam_size: int = 1,
+    beam_size: int = 5,
 ) -> TranscriptionResult:
     """Transcribe an English audio file and collect baseline timings."""
     from faster_whisper import WhisperModel
@@ -131,8 +131,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--model",
         choices=SUPPORTED_MODELS,
-        default="tiny.en",
-        help="Whisper model to benchmark (default: tiny.en)",
+        default=DEFAULT_MODEL,
+        help=f"Whisper model to benchmark (default: {DEFAULT_MODEL})",
     )
     parser.add_argument(
         "--device", default="cuda", help="Inference device (default: cuda)"
@@ -146,9 +146,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--beam-size",
         type=int,
         choices=range(1, 6),
-        default=1,
+        default=5,
         metavar="1-5",
-        help="Number of decoding candidates for offline comparison (default: 1)",
+        help="Number of decoding candidates for offline comparison (default: 5)",
     )
     parser.add_argument(
         "--json", action="store_true", help="Print machine-readable JSON"

@@ -12,8 +12,22 @@ from lecturebridge.offline import (
 )
 
 
-def test_small_english_model_is_supported() -> None:
-    assert "small.en" in SUPPORTED_MODELS
+def test_distil_large_v35_is_default() -> None:
+    from lecturebridge.offline import build_parser
+
+    args = build_parser().parse_args(["audio.m4a"])
+
+    assert args.model == "distil-large-v3.5"
+    assert args.beam_size == 5
+
+
+def test_debate_and_fallback_models_are_supported() -> None:
+    assert SUPPORTED_MODELS == (
+        "distil-large-v3.5",
+        "small.en",
+        "base.en",
+        "tiny.en",
+    )
 
 
 def test_calculate_rtf() -> None:
