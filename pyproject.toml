@@ -25,3 +25,8 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.7",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "gpu: opt-in test that loads an ASR model on CUDA",
+]

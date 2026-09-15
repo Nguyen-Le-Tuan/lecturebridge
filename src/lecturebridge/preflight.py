@@ -109,26 +109,27 @@ def cache_check(
 
 
 def port_check(port: int = 8000, expected_model: str = DEFAULT_MODEL) -> Check:
+    check_name = f"Port {port}"
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.settimeout(0.5)
         open_port = probe.connect_ex(("127.0.0.1", port)) == 0
     if not open_port:
-        return Check("Port 8000", True, "available")
+        return Check(check_name, True, "available")
 
     try:
         with urlopen(f"http://127.0.0.1:{port}/health", timeout=1) as response:
             payload = json.load(response)
     except (OSError, URLError, json.JSONDecodeError):
-        return Check("Port 8000", False, "occupied by another service")
+        return Check(check_name, False, "occupied by another service")
     ready = response.status == 200 and payload.get("ready") is True
     if not ready:
-        return Check("Port 8000", False, "service is not ready")
+        return Check(check_name, False, "service is not ready")
 
     try:
         with urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=1) as response:
             model_payload = json.load(response)
     except (OSError, URLError, json.JSONDecodeError):
-        return Check("Port 8000", False, "could not verify the running ASR model")
+        return Check(check_name, False, "could not verify the running ASR model")
 
     model_ids = {
         item.get("id")
@@ -138,7 +139,7 @@ def port_check(port: int = 8000, expected_model: str = DEFAULT_MODEL) -> Check:
     expected_id = f"faster-whisper/{expected_model}"
     model_matches = expected_id in model_ids
     return Check(
-        "Port 8000",
+        check_name,
         model_matches,
         (
             f"LectureBridge is ready with {expected_model}"
