@@ -2,8 +2,9 @@
 
 ## 1. LectureBridge là gì?
 
-Hãy tưởng tượng em đang ngồi trong lớp. Thầy giáo nói tiếng Anh, nhưng em muốn
-đọc phụ đề tiếng Anh và tiếng Việt trên iPad.
+Hãy tưởng tượng em đang ngồi trong lớp. Mọi người nói tiếng Anh rất nhanh, nhưng
+em muốn đọc phụ đề tiếng Anh trên iPad. Khi cần, em cũng có thể bật bản dịch
+tiếng Việt.
 
 LectureBridge là một “cây cầu” làm việc đó:
 
@@ -15,10 +16,8 @@ Microphone của iPad
 Đường hầm riêng Tailscale
         ↓
 Laptop nghe và viết lại thành chữ tiếng Anh
-        ↓
-Laptop dịch chữ tiếng Anh sang tiếng Việt
-        ↓
-Safari trên iPad hiển thị cả hai
+        ├──→ Safari trên iPad hiển thị tiếng Anh
+        └──→ Nếu bật dịch: laptop dịch sang tiếng Việt
 ```
 
 Điểm đặc biệt là phần AI chính chạy trên laptop của mình. Âm thanh không cần
@@ -55,33 +54,35 @@ Laptop là bộ não và làm phần việc nặng:
 
 - nhận các mẩu âm thanh từ iPad;
 - dùng GPU để biến tiếng nói thành chữ tiếng Anh;
-- dùng CPU để dịch tiếng Anh sang tiếng Việt;
+- nếu người dùng bật dịch, dùng CPU để dịch tiếng Anh sang tiếng Việt;
 - gửi kết quả về Safari.
 
 Máy hiện tại có CPU Intel Core i5-12500H, GPU RTX 3050 với 4 GB VRAM và 16 GB
 RAM. VRAM là vùng nhớ riêng của GPU. Nó giống chiếc bàn làm việc của GPU: model
 càng lớn thì cần mặt bàn càng rộng.
 
-### Faster-Whisper và model `small.en`
+### Faster-Whisper và model `distil-large-v3.5`
 
 Whisper là một loại AI đã học cách nghe tiếng nói. Faster-Whisper là cách chạy
 Whisper nhanh và tiết kiệm tài nguyên hơn.
 
-LectureBridge hiện dùng model `small.en`:
+LectureBridge hiện dùng model `distil-large-v3.5`:
 
-- `small` là kích thước model;
-- `.en` nghĩa là model chuyên cho tiếng Anh;
+- `distil` nghĩa là model lớn đã được “chưng cất” để chạy gọn và nhanh hơn;
+- model được huấn luyện cho nhận dạng tiếng Anh;
 - model chạy trên GPU để có tốc độ gần thời gian thực.
 
 Các model nhỏ hơn vẫn còn để dự phòng:
 
+- `small.en`: dự phòng đầu tiên nếu model chính bị chậm;
 - `base.en`: nhẹ hơn và nhanh hơn;
 - `tiny.en`: nhẹ nhất, dùng khi máy bị chậm hoặc thiếu bộ nhớ.
 
 ### NLLB và CTranslate2
 
-Sau khi có chữ tiếng Anh, model NLLB-200 distilled 600M dịch nó sang tiếng
-Việt. CTranslate2 là bộ máy giúp chạy model dịch gọn hơn.
+Khi người dùng chạy với cờ `--translation`, model NLLB-200 distilled 600M dịch
+chữ tiếng Anh sang tiếng Việt. CTranslate2 là bộ máy giúp chạy model dịch gọn
+hơn. Bình thường NLLB không được nạp để ưu tiên transcript tiếng Anh.
 
 NLLB được buộc chạy trên CPU. Lý do là GPU chỉ có 4 GB VRAM và cần dành chỗ cho
 model nghe tiếng Anh.
@@ -94,7 +95,7 @@ WhisperLiveKit, viết tắt là WLK, ghép nhiều phần lại với nhau:
 - thu microphone;
 - WebSocket truyền âm thanh;
 - nhận dạng giọng nói liên tục;
-- dịch;
+- dịch khi người dùng chủ động bật;
 - gửi phụ đề về trình duyệt.
 
 LectureBridge khóa WLK ở phiên bản `0.2.26`. “Khóa phiên bản” nghĩa là không tự
@@ -155,8 +156,8 @@ Hai phần này giúp hệ thống không cố “nghe ra từ” trong một đ
 
 ### Bước 6: Faster-Whisper tạo chữ tiếng Anh
 
-Faster-Whisper đưa các con số âm thanh vào model `small.en`. Model đoán các từ
-tiếng Anh có khả năng đã được nói.
+Faster-Whisper đưa các con số âm thanh vào model `distil-large-v3.5`. Model đoán
+các từ tiếng Anh có khả năng đã được nói.
 
 LectureBridge nói rõ ngôn ngữ nguồn là `en`. Việc này giúp model không mất thời
 gian đoán ngôn ngữ và không dễ nhầm tiếng Anh thành ngôn ngữ khác.
@@ -181,10 +182,11 @@ Vì thế giao diện có hai loại chữ:
 Khi có khoảng ngừng nói dài hơn khoảng 1,2 giây, hệ thống có thể tạo ranh giới
 ổn định cho câu. Đây là lý do nên chờ một chút trước khi đánh giá kết quả cuối.
 
-### Bước 8: NLLB dịch sang tiếng Việt
+### Bước 8: NLLB dịch sang tiếng Việt nếu được bật
 
-Chữ tiếng Anh được gửi cho NLLB trên CPU. Kết quả tiếng Việt được ghép cùng
-phụ đề tiếng Anh rồi gửi về iPad.
+Ở chế độ mặc định, bước này được bỏ qua. Nếu chạy `lecturebridge-live
+--translation`, chữ tiếng Anh được gửi cho NLLB trên CPU. Kết quả tiếng Việt
+được ghép cùng phụ đề tiếng Anh rồi gửi về iPad.
 
 Bản dịch thường chậm hơn chữ tiếng Anh một chút. Nếu câu tiếng Anh ban đầu sai,
 bản dịch cũng có thể sai theo. Vì vậy cần quan sát cả hai dòng để biết lỗi nằm ở
@@ -245,10 +247,11 @@ Kết quả đã đo với file riêng tư dài 83,84 giây:
 | --- | ---: | ---: | --- |
 | `tiny.en` | 0,89 giây | 0,011 | Đạt, không OOM |
 | `base.en` | 1,37 giây | 0,016 | Đạt, không OOM |
-| `small.en` | 2,61 giây | 0,031 | Đạt, được chọn làm mặc định |
+| `small.en` | 2,61 giây | 0,031 | Đạt, dự phòng cấp 1 |
+| `distil-large-v3.5` | 2,55 giây | 0,030 | Đạt, model mặc định mới |
 
 Các số này là bài kiểm tra file offline. Độ trễ live còn phụ thuộc vào cách chia
-âm thanh, LocalAgreement, mạng và dịch.
+âm thanh, LocalAgreement, mạng và bản dịch nếu được bật.
 
 ## 5. Những thứ đã được chuẩn bị và cài đặt
 
@@ -322,6 +325,11 @@ bài giảng có thuật ngữ. Model được nâng lên `small.en` và benchma
 
 Bài học: nâng model chỉ sau khi đã đo rằng máy đủ nhanh và đủ bộ nhớ.
 
+Sau khi lớp học cho thấy `small.en` vẫn sai nhiều, dự án tiếp tục thử
+`distil-large-v3.5`. Model mới xử lý file 83,84 giây trong 2,55 giây, dùng khoảng
+1,08 GB VRAM sau inference và theo kịp bài stress khoảng 184 từ/phút. Vì vậy nó
+trở thành mặc định cho debate; `small.en` trở thành đường lui.
+
 ### Vấn đề 4: `small.en` cộng model dịch làm GPU hết chỗ
 
 Lần chạy đầu tiên với `small.en` và NLLB báo **CUDA out of memory**, viết tắt là
@@ -331,7 +339,7 @@ chọn GPU, khiến hai model tranh nhau 4 GB VRAM.
 Cách sửa:
 
 ```text
-GPU: chỉ chạy Faster-Whisper small.en
+GPU: chỉ chạy Faster-Whisper
 CPU: chạy NLLB dịch EN → VI
 ```
 
@@ -375,7 +383,7 @@ Kết quả gần nhất:
 
 ```text
 Ruff: đạt
-Pytest: 13 test đạt
+Pytest: 20 test đạt, 1 test GPU opt-in được bỏ qua mặc định
 ```
 
 Test kiểm tra những việc như:
@@ -392,7 +400,7 @@ Test kiểm tra những việc như:
 ### Preflight trước giờ học
 
 ```bash
-uv run lecturebridge-preflight
+uv run lecturebridge-preflight --peer ipad153
 ```
 
 Preflight giống danh sách kiểm tra trước khi máy bay cất cánh. Nó kiểm tra:
@@ -402,10 +410,11 @@ Preflight giống danh sách kiểm tra trước khi máy bay cất cánh. Nó k
 3. GPU NVIDIA có hoạt động không;
 4. FFmpeg có sẵn không;
 5. Tailscale có online không;
-6. model ASR và NLLB đã tải chưa;
-7. cổng 8000 trống hoặc đúng LectureBridge đang chạy.
+6. model ASR đã tải chưa và chỉ kiểm tra NLLB khi bật dịch;
+7. iPad có kết nối direct hay relay nếu truyền `--peer`;
+8. cổng 8000 trống hoặc đúng model LectureBridge đang chạy.
 
-Kết quả gần nhất là 7/7 mục PASS.
+Kết quả gần nhất là mọi mục đều PASS và đường tới iPad là direct.
 
 ### Kiểm tra live không cần microphone
 
@@ -420,6 +429,11 @@ Một test client đã giả làm trình duyệt:
 - nhận `ready_to_stop` ở cuối;
 - không OOM.
 
+Sau đó một bài test EN-only mới đã chạy `distil-large-v3.5` với audio được tăng
+tốc tới khoảng 184 từ/phút. Chữ đầu xuất hiện sau 0,56 giây, backlog xử lý cao
+nhất 1,8 giây và backlog chốt chữ cao nhất 2,7 giây. Test này chứng minh máy theo
+kịp về tốc độ, chưa chứng minh mọi từ trong debate thật đều chính xác.
+
 Nội dung transcript không được đưa vào repository.
 
 ### Kiểm tra vẫn cần con người
@@ -430,7 +444,7 @@ bài giảng thật hay không. Vẫn cần:
 - thử microphone Safari trên iPad qua URL HTTPS;
 - nói hoặc dùng nguồn hợp lệ trong hai phút;
 - quan sát độ chính xác của câu tiếng Anh đã chốt;
-- quan sát bản dịch tiếng Việt;
+- kiểm tra transcript không trễ liên tục quá 5 giây;
 - chạy 20 phút với nguồn điện thật để xem có nóng, treo hoặc backlog không.
 
 **Backlog** là hàng âm thanh chờ xử lý. Nếu người nói tạo âm thanh nhanh hơn máy
@@ -456,11 +470,10 @@ cần tuân thủ quy định của lớp và xin phép nếu việc thu âm là
 Tại thời điểm viết tài liệu này:
 
 - branch Git là `chore/bootstrap`;
-- live mặc định dùng `small.en`;
+- live mặc định dùng `distil-large-v3.5` và chỉ hiện tiếng Anh;
 - nguồn là tiếng Anh `en`;
-- đích là tiếng Việt `vi`;
 - Faster-Whisper chạy trên GPU;
-- NLLB CTranslate2 chạy trên CPU;
+- NLLB CTranslate2 chỉ được nạp trên CPU khi bật `--translation`;
 - server chỉ bind `127.0.0.1:8000`;
 - Tailscale Serve chỉ mở trong tailnet;
 - health endpoint trả về `ready: true`;
@@ -475,13 +488,15 @@ Các commit kể lại lịch sử công việc theo thứ tự:
 5. `d25fe5a` — thêm preflight;
 6. `6a00088` — thêm runbook và bằng chứng test;
 7. `51f8643` — nâng ASR mặc định lên `small.en` và giải quyết OOM.
+8. `8a1a0ed` — thêm chế độ debate EN-only với `distil-large-v3.5`;
+9. `b5c17c3` — thêm test model, preflight và stress GPU cho debate.
 
 ## 10. Cách chạy ngắn nhất
 
 Trong thư mục repository trên laptop:
 
 ```bash
-uv run lecturebridge-preflight
+uv run lecturebridge-preflight --peer ipad153
 uv run lecturebridge-live
 ```
 
@@ -496,13 +511,13 @@ Khi thấy server sẵn sàng:
 Nếu máy chậm, thử theo thứ tự:
 
 ```bash
+uv run lecturebridge-live --model small.en
 uv run lecturebridge-live --model base.en
 uv run lecturebridge-live --model tiny.en
-uv run lecturebridge-live --no-translation
 ```
 
-Chế độ `--no-translation` vẫn giữ phụ đề tiếng Anh và là phương án dự phòng tốt
-nếu dịch làm phụ đề trễ.
+Muốn thử lại bản dịch tiếng Việt, chủ động chạy
+`uv run lecturebridge-live --translation`. EN-only vẫn là mặc định.
 
 ## 11. Cách tư duy đã dùng khi xây MVP
 
@@ -515,8 +530,8 @@ Python đúng
   → GPU chạy model
   → file audio thành chữ
   → âm thanh live thành chữ
-  → dịch sang tiếng Việt
   → iPad kết nối riêng tư
+  → tùy chọn: dịch sang tiếng Việt
 ```
 
 Chỉ qua cổng tiếp theo khi cổng trước có bằng chứng hoạt động.
@@ -533,9 +548,9 @@ dịch đang lấy GPU, sau đó chuyển riêng nó sang CPU và chạy lại �
 
 ### Luôn có đường lui
 
-`small.en` là mặc định nhưng `base.en`, `tiny.en` và EN-only vẫn còn. Trong lớp,
-một hệ thống hơi kém hơn nhưng chạy liên tục tốt hơn một hệ thống thông minh hơn
-mà bị treo.
+`distil-large-v3.5` là mặc định nhưng `small.en`, `base.en` và `tiny.en` vẫn còn.
+Trong lớp, một hệ thống hơi kém hơn nhưng chạy liên tục tốt hơn một hệ thống
+thông minh hơn mà bị treo.
 
 ### Bảo vệ dữ liệu ngay từ đầu
 
@@ -595,7 +610,8 @@ Thêm đồng hồ mức âm thanh với ba vùng:
 Viết transcript chuẩn bằng tay cho một đoạn audio được phép dùng, rồi tính WER.
 
 **WER**, hay Word Error Rate, là tỉ lệ từ bị sai, thiếu hoặc thừa. WER càng thấp
-càng tốt. Khi đó có thể so `base.en` và `small.en` bằng con số thay vì cảm giác.
+càng tốt. Khi đó có thể so `distil-large-v3.5`, `small.en` và các model dự phòng
+bằng con số thay vì cảm giác.
 
 ### Làm sao phục hồi khi Wi-Fi chập chờn?
 
@@ -622,7 +638,7 @@ Hiển thị backlog và độ trễ bằng màu:
 
 - xanh: đang theo kịp;
 - vàng: bắt đầu chậm;
-- đỏ: nên chuyển `base.en` hoặc EN-only.
+- đỏ: nên chuyển lần lượt sang `small.en`, `base.en`, rồi `tiny.en`.
 
 ### Làm sao làm giao diện dễ đọc trong lớp?
 
@@ -640,7 +656,7 @@ WebSocket giữ liên lạc
 VAD/VAC tìm giọng nói
 Faster-Whisper viết tiếng Anh
 LocalAgreement chốt từ ổn định
-NLLB dịch tiếng Việt
+NLLB dịch tiếng Việt nếu được bật
 Safari hiển thị kết quả
 ```
 

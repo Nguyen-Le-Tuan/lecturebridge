@@ -1,21 +1,24 @@
 # LectureBridge
 
-LectureBridge is a local-first English-to-Vietnamese live caption prototype.
-An iPhone or iPad captures audio in Safari, while an Ubuntu laptop performs ASR and
-translation locally.
+LectureBridge is a local-first English live-caption prototype with optional
+Vietnamese translation. An iPhone or iPad captures audio in Safari, while an
+Ubuntu laptop performs ASR locally.
 
 New to the project? Read the Vietnamese, beginner-friendly walkthrough:
 [`docs/lecturebridge-explained-for-a-12-year-old.md`](docs/lecturebridge-explained-for-a-12-year-old.md).
 
 ```text
-iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> NLLB CPU -> EN/VI captions
+iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> English captions
+                                                       \-> optional NLLB CPU -> Vietnamese
 ```
 
 ## Current MVP
 
 - One microphone client and one session.
-- English transcription with `small.en` by default on NVIDIA CUDA.
-- Vietnamese translation with NLLB-200 distilled 600M.
+- High-accuracy English transcription with `distil-large-v3.5` by default on
+  NVIDIA CUDA.
+- English-only by default; optional Vietnamese translation with NLLB-200
+  distilled 600M on CPU.
 - Browser UI supplied by pinned WhisperLiveKit `0.2.26`.
 - Tailnet-only access through Tailscale Serve; Funnel is not used.
 - Audio and transcripts are not saved by default.
@@ -32,7 +35,7 @@ iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> NLLB CPU -> E
 
 ```bash
 uv sync
-uv run lecturebridge-preflight
+uv run lecturebridge-preflight --peer ipad153
 ```
 
 Every preflight line must say `PASS`. The first sync downloads several large
@@ -46,7 +49,7 @@ directory and common audio formats are ignored by Git.
 
 ```bash
 uv run lecturebridge-transcribe data/private/english_test_30s.m4a
-uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model base.en
+uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model distil-large-v3.5
 uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model small.en --beam-size 5
 ```
 
@@ -65,9 +68,15 @@ Open <http://127.0.0.1:8000> for a local check. For iPhone/iPad use, follow
 Fallbacks:
 
 ```bash
-uv run lecturebridge-live --model tiny.en
+uv run lecturebridge-live --model small.en
 uv run lecturebridge-live --model base.en
-uv run lecturebridge-live --no-translation
+uv run lecturebridge-live --model tiny.en
+```
+
+Opt in to Vietnamese translation only when needed:
+
+```bash
+uv run lecturebridge-live --translation
 ```
 
 ## Development checks
@@ -75,6 +84,13 @@ uv run lecturebridge-live --no-translation
 ```bash
 uv run ruff check .
 uv run pytest -q
+```
+
+The live CUDA acceptance test is opt-in and requires a permitted audio file:
+
+```bash
+LECTUREBRIDGE_DEBATE_AUDIO=/path/to/permitted.wav \
+  uv run pytest -q tests/test_debate_stress.py
 ```
 
 Measured results and known limitations are in

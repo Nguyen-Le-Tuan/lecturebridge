@@ -17,11 +17,18 @@ file is a summary, not a replacement for their license texts or model cards.
 - Their own repositories and installed distributions contain the authoritative
   license terms.
 
+## Distil-Whisper Large v3.5
+
+- Model: <https://huggingface.co/distil-whisper/distil-large-v3.5>
+- CTranslate2 weights: <https://huggingface.co/distil-whisper/distil-large-v3.5-ct2>
+- License: MIT
+- Role: default high-accuracy English ASR model
+
 ## NLLB-200 distilled 600M
 
 - Model: <https://huggingface.co/facebook/nllb-200-distilled-600M>
 - Model weights license: CC-BY-NC-4.0
-- Role: English-to-Vietnamese translation through NLLW/WhisperLiveKit
+- Role: optional English-to-Vietnamese translation through NLLW/WhisperLiveKit
 
 The NLLB weights are restricted to non-commercial use. Do not describe this
 MVP as commercially licensed, and review the current model card and license

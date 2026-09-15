@@ -1,7 +1,7 @@
 [project]
 name = "lecturebridge"
 version = "0.1.0"
-description = "Local-first real-time English to Vietnamese lecture translation."
+description = "Local-first real-time English lecture captions with optional Vietnamese translation."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
