@@ -13,6 +13,7 @@ file is a summary, not a replacement for their license texts or model cards.
 
 - Projects: <https://github.com/SYSTRAN/faster-whisper> and
   <https://github.com/OpenNMT/CTranslate2>
+- License: MIT
 - Role: local Whisper inference and optimized model execution
 - Their own repositories and installed distributions contain the authoritative
   license terms.
@@ -27,6 +28,8 @@ file is a summary, not a replacement for their license texts or model cards.
 ## NLLB-200 distilled 600M
 
 - Model: <https://huggingface.co/facebook/nllb-200-distilled-600M>
+- CTranslate2 conversion:
+  <https://huggingface.co/entai2965/nllb-200-distilled-600M-ctranslate2>
 - Model weights license: CC-BY-NC-4.0
 - Role: optional English-to-Vietnamese translation through NLLW/WhisperLiveKit
 
