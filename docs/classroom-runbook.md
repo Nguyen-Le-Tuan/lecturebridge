@@ -4,12 +4,13 @@ This is the shortest supported procedure for the current one-device MVP.
 
 ## Before leaving for class
 
-1. Boot Ubuntu, connect power, provide ventilation, and prevent suspend.
+1. Boot the Linux or Windows computer, connect power, provide ventilation, and
+   prevent suspend.
 2. Connect the laptop and iPhone/iPad to Tailscale.
 3. From the repository, run:
 
    ```bash
-   uv run lecturebridge-preflight --peer ipad153
+   uv run lecturebridge-preflight --device auto --peer ipad153
    ```
 
 4. Require every check to report `PASS`. The peer line should say `direct`;
@@ -17,7 +18,7 @@ This is the shortest supported procedure for the current one-device MVP.
 5. Start the server at least five minutes before it is needed:
 
    ```bash
-   uv run lecturebridge-live
+   uv run lecturebridge-live --device auto
    ```
 
 6. Wait for `Application startup complete`. Do not close this terminal.
@@ -33,6 +34,10 @@ Run this once on the laptop:
 tailscale serve --bg --yes http://127.0.0.1:8000
 tailscale serve status
 ```
+
+On Windows, run these commands in Windows Terminal (Administrator), without
+`sudo`. See [`setup-windows.md`](setup-windows.md) for the complete native
+Windows setup.
 
 If Tailscale prints an activation link, open it and enable Serve for this
 tailnet. Use the resulting `https://...ts.net` URL only. Never enable Funnel.

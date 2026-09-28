@@ -1,104 +1,154 @@
 # LectureBridge
 
 LectureBridge is a local-first English live-caption prototype with optional
-Vietnamese translation. An iPhone or iPad captures audio in Safari, while an
-Ubuntu laptop performs ASR locally.
-
-New to the project? Read the Vietnamese, beginner-friendly walkthrough:
-[`docs/lecturebridge-explained-for-a-12-year-old.md`](docs/lecturebridge-explained-for-a-12-year-old.md).
+Vietnamese translation. An iPhone or iPad captures audio in Safari while a
+Linux or Windows x86-64 computer performs inference locally.
 
 ```text
-iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper GPU -> English captions
-                                                       \-> optional NLLB CPU -> Vietnamese
+iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper -> English captions
+                                                   \-> optional NLLB -> Vietnamese
 ```
 
-## Current MVP
+The application prefers an NVIDIA GPU and safely falls back to CPU when CUDA
+is unavailable. Recordings and transcripts are not saved by default.
 
-- One microphone client and one session.
-- High-accuracy English transcription with `distil-large-v3.5` by default on
-  NVIDIA CUDA.
-- English-only by default; optional Vietnamese translation with NLLB-200
-  distilled 600M on CPU.
-- Browser UI supplied by pinned WhisperLiveKit `0.2.26`.
-- Tailnet-only access through Tailscale Serve; Funnel is not used.
-- Audio and transcripts are not saved by default.
+## What is included
+
+- High-accuracy English transcription with locked `distil-large-v3.5` weights.
+- Smaller `small.en`, `base.en`, and `tiny.en` fallback models.
+- Native Ubuntu/Linux and Windows 10/11 x86-64 setup.
+- NVIDIA CUDA acceleration or a slower CPU `int8` fallback.
+- Optional NLLB-200 distilled 600M translation on CPU.
+- Tailnet-only HTTPS through Tailscale Serve; Funnel is not supported.
 
 ## Requirements
 
-- Ubuntu with an NVIDIA GPU and a working driver.
+- A 64-bit Ubuntu/Linux or Windows 10/11 computer.
 - Python 3.12 managed by [`uv`](https://docs.astral.sh/uv/).
-- FFmpeg and Tailscale.
-- An iPhone or iPad signed into the same tailnet.
+- Tailscale on the computer and viewing device.
+- For GPU inference: an NVIDIA driver, CUDA 12, and cuDNN 9. Linux CUDA
+  runtime libraries are installed by the project; Windows libraries must be
+  available on `PATH`.
+- At least 10 GB free for the environment and default ASR model. Allow about
+  13 GB when optional translation is also installed.
 - Permission to capture and process the audio source.
 
-## Install and verify
+## Quick start
+
+Linux:
 
 ```bash
-uv sync
-uv run lecturebridge-preflight --peer ipad153
+git clone https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+cd lecturebridge
+bash scripts/bootstrap-linux.sh
 ```
 
-Every preflight line must say `PASS`. The first sync downloads several large
-CUDA dependencies. Model downloads also require Internet once; inference uses
-the local cache afterward.
+Windows PowerShell:
 
-## Offline baseline
+```powershell
+git clone https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+Set-Location lecturebridge
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
+```
 
-Place a permitted recording at `data/private/english_test_30s.m4a`. The entire
-directory and common audio formats are ignored by Git.
+The bootstrap scripts create `.venv`, install the locked dependencies, download
+the immutable default model, verify its SHA-256 checksums, and run readiness
+checks. Model weights remain outside Git.
+
+Detailed instructions:
+
+- [Linux setup](docs/setup-linux.md)
+- [Windows setup](docs/setup-windows.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Classroom runbook](docs/classroom-runbook.md)
+- [Public release checklist](docs/release-checklist.md)
+- [Original Vietnamese project roadmap](docs/roadmap/lecture-translation-roadmap-vi.pdf)
+- [Vietnamese beginner walkthrough](docs/lecturebridge-explained-for-a-12-year-old.md)
+
+### Khởi động nhanh bằng tiếng Việt
+
+Clone repo, chạy script tương ứng với hệ điều hành, rồi kiểm tra dòng
+`NVIDIA GPU`. Nếu dòng này là `PASS`, LectureBridge đang dùng GPU; nếu là
+`WARN`, chương trình vẫn chạy bằng CPU nhưng chậm hơn. Không copy `.venv` hoặc
+model từ máy khác vì các file nhị phân phụ thuộc hệ điều hành.
+
+## Run
+
+Start the local server:
 
 ```bash
-uv run lecturebridge-transcribe data/private/english_test_30s.m4a
-uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model distil-large-v3.5
-uv run lecturebridge-transcribe data/private/english_test_30s.m4a --model small.en --beam-size 5
+uv run lecturebridge-live --device auto
 ```
 
-The command prints timestamped English text, model load time, inference time,
-and real-time factor (RTF). Lower RTF is faster; the initial target is `< 0.7`.
+Open <http://127.0.0.1:8000> for a local check. To use an iPhone or iPad,
+configure Tailscale Serve as described in the classroom runbook.
 
-## Live captions
+Force a device or choose a smaller model:
 
 ```bash
-uv run lecturebridge-live
+uv run lecturebridge-live --device cuda
+uv run lecturebridge-live --device cpu --model tiny.en
 ```
 
-Open <http://127.0.0.1:8000> for a local check. For iPhone/iPad use, follow
-[`docs/classroom-runbook.md`](docs/classroom-runbook.md).
-
-Fallbacks:
+Download and verify models explicitly:
 
 ```bash
-uv run lecturebridge-live --model small.en
-uv run lecturebridge-live --model base.en
-uv run lecturebridge-live --model tiny.en
+uv run lecturebridge-models list
+uv run lecturebridge-models download --model small.en
+uv run lecturebridge-models verify --model small.en
+uv run lecturebridge-models download --translation
 ```
 
-Opt in to Vietnamese translation only when needed:
+Translation is opt-in because it downloads a large non-commercial model:
 
 ```bash
 uv run lecturebridge-live --translation
 ```
 
-## Development checks
+## Offline transcription and verification
+
+Place a permitted recording under `data/private/`; the directory and common
+audio formats are ignored by Git.
 
 ```bash
-uv run ruff check .
-uv run pytest -q
+uv run lecturebridge-preflight --device auto
+uv run lecturebridge-preflight --device cuda --deep
+uv run lecturebridge-transcribe data/private/example.m4a --device auto
 ```
 
-The live CUDA acceptance test is opt-in and requires a permitted audio file:
+`--deep` loads and executes the model, which catches CUDA/cuDNN problems that
+`nvidia-smi` alone cannot detect.
+
+## Development
+
+```bash
+uv sync --locked
+uv run ruff check .
+uv run pytest -q
+uv build
+uv run python scripts/check_repository.py
+```
+
+The live GPU acceptance test is opt-in and requires a permitted audio file:
 
 ```bash
 LECTUREBRIDGE_DEBATE_AUDIO=/path/to/permitted.wav \
   uv run pytest -q tests/test_debate_stress.py
 ```
 
-Measured results and known limitations are in
-[`docs/test-evidence.md`](docs/test-evidence.md). Third-party model and software
-terms are summarized in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+GitHub-hosted CI tests both Linux and Windows CPU-compatible code paths. GPU
+acceptance must run manually on trusted NVIDIA hardware.
 
-## Privacy
+## Privacy, licenses, and limitations
 
-Do not commit classroom recordings, real transcripts, cookies, tokens, `.env`
-files, or model weights. Confirm the class recording policy and obtain any
-required permission before turning on the microphone.
+Do not commit classroom recordings, transcripts, cookies, tokens, `.env`
+files, model weights, or generated output. Confirm the recording policy and
+obtain permission before enabling the microphone.
+
+One mono microphone cannot reliably recover overlapping speech. Captions may
+contain errors and must not be treated as an authoritative transcript.
+
+LectureBridge source and project-owned documentation are licensed under the
+[MIT License](LICENSE). Model weights and dependencies retain their own terms;
+see [third-party notices](THIRD_PARTY_NOTICES.md). In particular, the optional
+NLLB weights are CC-BY-NC-4.0 and are not licensed for commercial use.

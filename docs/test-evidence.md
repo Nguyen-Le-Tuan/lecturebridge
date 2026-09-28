@@ -1,5 +1,24 @@
 # Test evidence
 
+## Cross-platform packaging baseline — 2026-09-28
+
+The public-release work added immutable model locks, automatic CUDA/CPU runtime
+selection, native Windows bootstrap documentation, and Linux/Windows CI.
+
+Verified on the Linux reference machine:
+
+- `uv run ruff check .`: pass.
+- `uv run pytest -q`: 32 passed, 1 opt-in GPU test skipped.
+- `uv build`: source distribution and pure-Python wheel built successfully.
+- Locked Distil-Whisper and NLLB snapshots: size and SHA-256 verification pass.
+- `lecturebridge-preflight --device cuda --deep`: model executed successfully
+  on the RTX 3050 with `int8_float16`.
+
+Windows dependency resolution succeeds for `x86_64-pc-windows-msvc`, but a
+native Windows GPU acceptance run is still required before the repository is
+made public or tagged `v0.1.0`. GitHub-hosted runners validate Windows code and
+CPU-compatible behavior; they do not prove CUDA execution.
+
 Date: 2026-09-14
 
 ## Test machine
