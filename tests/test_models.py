@@ -19,3 +19,8 @@ def test_model_cache_directory_names_match_hugging_face_layout() -> None:
         MODEL_BY_NAME["small.en"].cache_directory_name
         == "models--Systran--faster-whisper-small.en"
     )
+
+
+def test_models_are_pinned_to_immutable_revisions() -> None:
+    assert all(len(spec.revision) == 40 for spec in MODEL_SPECS)
+    assert all(set(spec.revision) <= set("0123456789abcdef") for spec in MODEL_SPECS)

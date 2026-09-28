@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "models": {
+    "distil-large-v3.5": {
+      "kind": "asr",
+      "repository": "distil-whisper/distil-large-v3.5-ct2",
+      "revision": "9793ccc07920e0f830e1dba0343efcdf0ef8c903",
+      "license": "mit",
+      "files": {
+        "config.json": {"size": 2690, "sha256": "90c55f775cc4e0bb17293d0bf12f96557a486f20dea886fabd8e6075a3588b21"},
+        "model.bin": {"size": 1512927867, "sha256": "c58b88b8585ffcd2135fddaaf421ce72cb223b32edea70d156aed1dea319a119"},
+        "preprocessor_config.json": {"size": 340, "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"},
+        "tokenizer.json": {"size": 2480645, "sha256": "b3c8202bbf06d8ee4232c5984baa563784ac4737e2e7fdc42fa180200d3cfcdb"},
+        "vocabulary.json": {"size": 1068114, "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"}
+      }
+    },
+    "small.en": {
+      "kind": "asr",
+      "repository": "Systran/faster-whisper-small.en",
+      "revision": "d1d751a5f8271d482d14ca55d9e2deeebbae577f",
+      "license": "mit",
+      "files": {
+        "config.json": {"size": 2657, "sha256": "666a9605530ac1f61fa8177f3702b4dacec9966749e42610839fcc32661d5fae"},
+        "model.bin": {"size": 483545366, "sha256": "62b2a45b05ee59acb4a5341b33ee35e041395d378d418a18acfe4c9e768ee37a"},
+        "tokenizer.json": {"size": 2128466, "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"},
+        "vocabulary.txt": {"size": 422309, "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"}
+      }
+    },
+    "base.en": {
+      "kind": "asr",
+      "repository": "Systran/faster-whisper-base.en",
+      "revision": "3d3d5dee26484f91867d81cb899cfcf72b96be6c",
+      "license": "mit",
+      "files": {
+        "config.json": {"size": 2227, "sha256": "f3bc3821e9fc76a27bae538e11ae5b677dcdd352b4600429ce7951d398569aeb"},
+        "model.bin": {"size": 145216508, "sha256": "2a166925539a16005f14ff328359f9b9adb9dc4fb631bb3b227526862e93e2ef"},
+        "tokenizer.json": {"size": 2128466, "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"},
+        "vocabulary.txt": {"size": 422309, "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"}
+      }
+    },
+    "tiny.en": {
+      "kind": "asr",
+      "repository": "Systran/faster-whisper-tiny.en",
+      "revision": "0d3d19a32d3338f10357c0889762bd8d64bbdeba",
+      "license": "mit",
+      "files": {
+        "config.json": {"size": 2317, "sha256": "14b1b421a90349bc551b881461426b561a874049cb9e4c4864f2ca384f6a7cc5"},
+        "model.bin": {"size": 75537502, "sha256": "1a5afae06a4db91c975c9a9d78be5cc110ee4ea022ad57d55492e4550e936b2a"},
+        "tokenizer.json": {"size": 2128466, "sha256": "929c5252409436dce1b38a75d1abbcb5e132d170d8e324e4e04ed915fa2d22df"},
+        "vocabulary.txt": {"size": 422309, "sha256": "ff77588746d3a2595d32ab5b69ffd7b95ce2441ac57533cb66fc3eb575a115cf"}
+      }
+    },
+    "nllb-200-distilled-600M": {
+      "kind": "translation",
+      "repository": "entai2965/nllb-200-distilled-600M-ctranslate2",
+      "revision": "86876131d0a16b17ced0a5c558fdc3e4613ae545",
+      "license": "cc-by-nc-4.0",
+      "local_directory": "nllb-200-distilled-600M-ctranslate2",
+      "files": {
+        "config.json": {"size": 189, "sha256": "4244772990e30069563e3ddfb4ad6dc95bdfd2ac3de667ea8858c9b0a8433fa8"},
+        "model.bin": {"size": 2464511400, "sha256": "c04fb4ea42229c5f43f645e73d49175d34c3e0883ee5b3b110cbb1612dd4bcda"},
+        "sentencepiece.bpe.model": {"size": 4852054, "sha256": "14bb8dfb35c0ffdea7bc01e56cea38b9e3d5efcdcb9c251d6b40538e1aab555a"},
+        "shared_vocabulary.json": {"size": 5921176, "sha256": "af53bfd0e6f726209e7325e45b87ab3b14e5856f7d42d7b9be91de3287c45267"},
+        "special_tokens_map.json": {"size": 3548, "sha256": "992bd4ed610d644d6823081937bcc91bb8878dd556cea4ae5327f2480361330e"},
+        "tokenizer.json": {"size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"},
+        "tokenizer_config.json": {"size": 564, "sha256": "d1aa8c3697d3e35674f97b5b7e9c99d22b010f528e80140257d97316be90d044"}
+      }
+    }
+  }
+}
