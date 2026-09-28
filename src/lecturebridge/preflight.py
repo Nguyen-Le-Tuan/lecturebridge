@@ -17,14 +17,34 @@ from urllib.request import urlopen
 
 from huggingface_hub.constants import HF_HUB_CACHE
 
+from lecturebridge.model_store import (
+    TRANSLATION_MODEL,
+    load_locked_models,
+    model_directory,
+    verify_snapshot,
+)
 from lecturebridge.models import DEFAULT_MODEL, MODEL_BY_NAME, SUPPORTED_MODELS
+from lecturebridge.runtime import (
+    DEVICE_CHOICES,
+    RuntimeSelection,
+    cuda_prerequisites,
+    ensure_runtime,
+)
+
+PASS = "PASS"
+WARN = "WARN"
+FAIL = "FAIL"
 
 
 @dataclass(frozen=True)
 class Check:
     name: str
-    passed: bool
+    status: str
     detail: str
+
+    @property
+    def passed(self) -> bool:
+        return self.status != FAIL
 
 
 def repo_root() -> Path:
@@ -38,47 +58,65 @@ def run_command(command: list[str]) -> subprocess.CompletedProcess[str]:
 def python_check(root: Path) -> Check:
     expected = (root / ".venv").resolve()
     actual = Path(sys.prefix).resolve()
-    return Check("Python environment", actual == expected, str(actual))
+    status = PASS if actual == expected else FAIL
+    return Check("Python environment", status, str(actual))
 
 
 def package_check() -> Check:
     try:
         installed = version("whisperlivekit")
     except PackageNotFoundError:
-        return Check("WhisperLiveKit", False, "not installed; run `uv sync`")
-    return Check("WhisperLiveKit", installed == "0.2.26", installed)
+        return Check("WhisperLiveKit", FAIL, "not installed; run `uv sync`")
+    status = PASS if installed == "0.2.26" else FAIL
+    return Check("WhisperLiveKit", status, installed)
 
 
-def gpu_check() -> Check:
-    result = run_command(
-        [
-            "nvidia-smi",
-            "--query-gpu=name,memory.total,driver_version",
-            "--format=csv,noheader",
-        ]
-    )
-    detail = result.stdout.strip() or result.stderr.strip() or "not available"
-    return Check("NVIDIA GPU", result.returncode == 0, detail)
+def gpu_check(
+    requested_device: str = "auto",
+    runtime: RuntimeSelection | None = None,
+) -> Check:
+    if runtime is not None:
+        if runtime.device == "cuda":
+            return Check("NVIDIA GPU", PASS, runtime.detail)
+        if requested_device == "cpu":
+            return Check("NVIDIA GPU", PASS, "CPU explicitly selected")
+        return Check("NVIDIA GPU", WARN, runtime.detail)
+
+    ready, detail = cuda_prerequisites()
+    if ready:
+        return Check("NVIDIA GPU", PASS, detail)
+    status = FAIL if requested_device == "cuda" else WARN
+    return Check("NVIDIA GPU", status, detail)
 
 
-def executable_check(name: str) -> Check:
+def executable_check(name: str, *, required: bool = True) -> Check:
     location = shutil.which(name)
-    return Check(name, location is not None, location or "not found")
+    if location:
+        return Check(name, PASS, location)
+    status = FAIL if required else WARN
+    return Check(name, status, "not found")
 
 
 def tailscale_check() -> Check:
+    if shutil.which("tailscale") is None:
+        return Check("Tailscale", FAIL, "not installed or not on PATH")
     result = run_command(["tailscale", "status", "--json"])
     if result.returncode != 0:
-        return Check("Tailscale", False, result.stderr.strip() or "status failed")
+        return Check("Tailscale", FAIL, result.stderr.strip() or "status failed")
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError:
-        return Check("Tailscale", False, "invalid status response")
+        return Check("Tailscale", FAIL, "invalid status response")
     online = payload.get("BackendState") == "Running" and bool(
         payload.get("Self", {}).get("Online")
     )
     detail = "online" if online else f"backend={payload.get('BackendState', 'unknown')}"
-    return Check("Tailscale", online, detail)
+    return Check("Tailscale", PASS if online else FAIL, detail)
+
+
+def _hub_snapshot(hub: Path, model: str) -> Path:
+    spec = MODEL_BY_NAME[model]
+    return hub / spec.cache_directory_name / "snapshots" / spec.revision
 
 
 def cache_check(
@@ -89,23 +127,58 @@ def cache_check(
     hub: Path | None = None,
 ) -> Check:
     hub_root = hub or Path(HF_HUB_CACHE)
-    asr = hub_root / MODEL_BY_NAME[model].cache_directory_name
+    locked = load_locked_models()
+    asr_path = _hub_snapshot(hub_root, model)
+    asr_failures = verify_snapshot(locked[model], asr_path)
+
     translation_candidates = (
         root / "nllb-200-distilled-600M-ctranslate2",
-        hub_root / "models--entai2965--nllb-200-distilled-600M-ctranslate2",
+        hub_root
+        / "models--entai2965--nllb-200-distilled-600M-ctranslate2"
+        / "snapshots"
+        / locked[TRANSLATION_MODEL].revision,
     )
-    translation = next((path for path in translation_candidates if path.is_dir()), None)
-    asr_ready = asr.is_dir()
-    translation_ready = translation is not None
+    translation_path = next(
+        (path for path in translation_candidates if path.is_dir()), None
+    )
+    translation_failures = (
+        verify_snapshot(locked[TRANSLATION_MODEL], translation_path)
+        if translation_path is not None
+        else ["missing"]
+    )
+
+    asr_ready = not asr_failures
+    translation_ready = not translation_failures
     ready = asr_ready and (translation_ready or not translation_enabled)
     nllb_detail = (
-        "ready" if translation_ready else "missing"
+        "ready" if translation_ready else "; ".join(translation_failures)
     ) if translation_enabled else "not required (EN-only)"
-    detail = (
-        f"ASR {model}={'ready' if asr_ready else 'missing; download before class'}, "
-        f"NLLB={nllb_detail}"
+    asr_detail = "ready" if asr_ready else "; ".join(asr_failures)
+    detail = f"ASR {model}={asr_detail}, NLLB={nllb_detail}"
+    return Check("Model cache", PASS if ready else FAIL, detail)
+
+
+def deep_model_check(model: str, runtime: RuntimeSelection) -> Check:
+    """Load and execute the model to catch dynamic CUDA library failures."""
+    try:
+        import numpy as np
+        from faster_whisper import WhisperModel
+
+        path = model_directory(model, download=False)
+        loaded = WhisperModel(
+            str(path), device=runtime.device, compute_type=runtime.compute_type
+        )
+        segments, _ = loaded.transcribe(
+            np.zeros(16000, dtype=np.float32), language="en", beam_size=1
+        )
+        list(segments)
+    except (ImportError, OSError, RuntimeError, ValueError) as exc:
+        return Check("Deep model smoke test", FAIL, str(exc))
+    return Check(
+        "Deep model smoke test",
+        PASS,
+        f"{model} executed on {runtime.device} ({runtime.compute_type})",
     )
-    return Check("Model cache", ready, detail)
 
 
 def port_check(port: int = 8000, expected_model: str = DEFAULT_MODEL) -> Check:
@@ -114,22 +187,22 @@ def port_check(port: int = 8000, expected_model: str = DEFAULT_MODEL) -> Check:
         probe.settimeout(0.5)
         open_port = probe.connect_ex(("127.0.0.1", port)) == 0
     if not open_port:
-        return Check(check_name, True, "available")
+        return Check(check_name, PASS, "available")
 
     try:
         with urlopen(f"http://127.0.0.1:{port}/health", timeout=1) as response:
             payload = json.load(response)
     except (OSError, URLError, json.JSONDecodeError):
-        return Check(check_name, False, "occupied by another service")
+        return Check(check_name, FAIL, "occupied by another service")
     ready = response.status == 200 and payload.get("ready") is True
     if not ready:
-        return Check(check_name, False, "service is not ready")
+        return Check(check_name, FAIL, "service is not ready")
 
     try:
         with urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=1) as response:
             model_payload = json.load(response)
     except (OSError, URLError, json.JSONDecodeError):
-        return Check(check_name, False, "could not verify the running ASR model")
+        return Check(check_name, FAIL, "could not verify the running ASR model")
 
     model_ids = {
         item.get("id")
@@ -140,7 +213,7 @@ def port_check(port: int = 8000, expected_model: str = DEFAULT_MODEL) -> Check:
     model_matches = expected_id in model_ids
     return Check(
         check_name,
-        model_matches,
+        PASS if model_matches else FAIL,
         (
             f"LectureBridge is ready with {expected_model}"
             if model_matches
@@ -153,9 +226,9 @@ def peer_check(peer: str) -> Check:
     result = run_command(["tailscale", "ping", "-c", "1", peer])
     detail = result.stdout.strip() or result.stderr.strip() or "no response"
     if result.returncode != 0 or "pong from" not in detail:
-        return Check(f"Tailscale peer {peer}", False, detail)
+        return Check(f"Tailscale peer {peer}", FAIL, detail)
     route = "relay" if "DERP(" in detail else "direct"
-    return Check(f"Tailscale peer {peer}", True, f"{route}: {detail}")
+    return Check(f"Tailscale peer {peer}", PASS, f"{route}: {detail}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -167,9 +240,20 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Expected ASR model (default: {DEFAULT_MODEL})",
     )
     parser.add_argument(
+        "--device",
+        choices=DEVICE_CHOICES,
+        default="auto",
+        help="Inference device; auto prefers CUDA and falls back to CPU",
+    )
+    parser.add_argument(
         "--translation",
         action="store_true",
         help="Also require the optional English-to-Vietnamese translation model",
+    )
+    parser.add_argument(
+        "--deep",
+        action="store_true",
+        help="Load and execute the model to validate the selected runtime",
     )
     parser.add_argument("--peer", help="Optional Tailscale device name to ping")
     parser.add_argument(
@@ -182,7 +266,10 @@ def collect_checks(
     root: Path | None = None,
     *,
     model: str = DEFAULT_MODEL,
+    requested_device: str = "auto",
+    runtime: RuntimeSelection | None = None,
     translation_enabled: bool = False,
+    deep: bool = False,
     peer: str | None = None,
     port: int = 8000,
 ) -> list[Check]:
@@ -190,8 +277,8 @@ def collect_checks(
     checks = [
         python_check(project_root),
         package_check(),
-        gpu_check(),
-        executable_check("ffmpeg"),
+        gpu_check(requested_device, runtime),
+        executable_check("ffmpeg", required=False),
         tailscale_check(),
         cache_check(
             project_root,
@@ -202,6 +289,8 @@ def collect_checks(
     ]
     if peer:
         checks.insert(-1, peer_check(peer))
+    if deep and runtime is not None:
+        checks.insert(-1, deep_model_check(model, runtime))
     return checks
 
 
@@ -210,15 +299,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not 1 <= args.port <= 65535:
         print("error: port must be between 1 and 65535", file=sys.stderr)
         return 2
+    try:
+        runtime = ensure_runtime(args.device)
+    except RuntimeError as exc:
+        print(f"[FAIL] NVIDIA GPU: {exc}", file=sys.stderr)
+        return 1
+
     checks = collect_checks(
         model=args.model,
+        requested_device=args.device,
+        runtime=runtime,
         translation_enabled=args.translation,
+        deep=args.deep,
         peer=args.peer,
         port=args.port,
     )
     for check in checks:
-        marker = "PASS" if check.passed else "FAIL"
-        print(f"[{marker}] {check.name}: {check.detail}")
+        print(f"[{check.status}] {check.name}: {check.detail}")
     return 0 if all(check.passed for check in checks) else 1
 
 

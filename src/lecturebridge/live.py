@@ -6,9 +6,11 @@ import argparse
 import shutil
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
+from lecturebridge.model_store import TRANSLATION_MODEL, model_directory
 from lecturebridge.models import DEFAULT_MODEL, SUPPORTED_MODELS
-from lecturebridge.runtime import ensure_cuda_runtime
+from lecturebridge.runtime import DEVICE_CHOICES, ensure_runtime
 
 
 def force_nllb_cpu() -> None:
@@ -33,6 +35,7 @@ def build_wlk_command(
     *,
     executable: str,
     model: str,
+    model_dir: Path | None,
     port: int,
     translation_enabled: bool,
 ) -> list[str]:
@@ -58,6 +61,8 @@ def build_wlk_command(
         "--log-level",
         "INFO",
     ]
+    if model_dir is not None:
+        command.extend(["--model_dir", str(model_dir)])
     if translation_enabled:
         command.extend(
             [
@@ -84,6 +89,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_MODEL,
         help=f"ASR model (default: {DEFAULT_MODEL})",
     )
+    parser.add_argument(
+        "--device",
+        choices=DEVICE_CHOICES,
+        default="auto",
+        help="Inference device; auto prefers CUDA and falls back to CPU",
+    )
     translation = parser.add_mutually_exclusive_group()
     translation.add_argument(
         "--translation",
@@ -108,7 +119,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     try:
-        ensure_cuda_runtime()
+        runtime = ensure_runtime(args.device)
+    except RuntimeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    if runtime.warning:
+        print(f"warning: {runtime.warning}", file=sys.stderr)
+
+    try:
+        asr_model_dir = model_directory(args.model, download=True)
+        if args.translation:
+            model_directory(TRANSLATION_MODEL, download=True)
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -127,6 +148,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     command = build_wlk_command(
         executable=executable,
         model=args.model,
+        model_dir=asr_model_dir,
         port=args.port,
         translation_enabled=args.translation,
     )

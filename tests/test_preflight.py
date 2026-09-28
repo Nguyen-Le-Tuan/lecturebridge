@@ -3,6 +3,8 @@ import subprocess
 from pathlib import Path
 
 from lecturebridge.preflight import (
+    FAIL,
+    PASS,
     Check,
     cache_check,
     peer_check,
@@ -25,17 +27,31 @@ def test_python_check_accepts_expected_virtual_environment(
 
 
 def test_check_is_immutable_result() -> None:
-    result = Check("GPU", True, "ready")
+    result = Check("GPU", PASS, "ready")
 
     assert result.name == "GPU"
+    assert result.status == PASS
     assert result.passed is True
     assert result.detail == "ready"
 
 
-def test_model_cache_is_mode_aware(tmp_path: Path) -> None:
+def test_failed_check_is_not_passing() -> None:
+    assert not Check("GPU", FAIL, "missing").passed
+
+
+def test_model_cache_is_mode_aware(monkeypatch, tmp_path: Path) -> None:
     hub = tmp_path / "hub"
-    model = hub / "models--distil-whisper--distil-large-v3.5-ct2"
+    model = (
+        hub
+        / "models--distil-whisper--distil-large-v3.5-ct2"
+        / "snapshots"
+        / "9793ccc07920e0f830e1dba0343efcdf0ef8c903"
+    )
     model.mkdir(parents=True)
+    monkeypatch.setattr(
+        "lecturebridge.preflight.verify_snapshot",
+        lambda locked, path: [] if path.is_dir() else ["missing"],
+    )
 
     english_only = cache_check(tmp_path, hub=hub)
     translated = cache_check(tmp_path, hub=hub, translation_enabled=True)
@@ -45,7 +61,12 @@ def test_model_cache_is_mode_aware(tmp_path: Path) -> None:
     assert not translated.passed
     assert "NLLB=missing" in translated.detail
 
-    (hub / "models--entai2965--nllb-200-distilled-600M-ctranslate2").mkdir()
+    (
+        hub
+        / "models--entai2965--nllb-200-distilled-600M-ctranslate2"
+        / "snapshots"
+        / "86876131d0a16b17ced0a5c558fdc3e4613ae545"
+    ).mkdir(parents=True)
     assert cache_check(
         tmp_path,
         hub=hub,

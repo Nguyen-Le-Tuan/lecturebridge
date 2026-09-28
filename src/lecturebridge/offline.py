@@ -10,7 +10,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
+from lecturebridge.model_store import model_directory
 from lecturebridge.models import DEFAULT_MODEL, SUPPORTED_MODELS
+from lecturebridge.runtime import DEVICE_CHOICES, ensure_runtime
 
 
 @dataclass(frozen=True)
@@ -54,6 +56,7 @@ def transcribe_audio(
     audio_path: Path,
     *,
     model_name: str = DEFAULT_MODEL,
+    model_path: Path | None = None,
     device: str = "cuda",
     compute_type: str = "int8_float16",
     beam_size: int = 5,
@@ -65,7 +68,9 @@ def transcribe_audio(
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
     load_started = perf_counter()
-    model = WhisperModel(model_name, device=device, compute_type=compute_type)
+    model = WhisperModel(
+        str(model_path or model_name), device=device, compute_type=compute_type
+    )
     model_load_seconds = perf_counter() - load_started
 
     inference_started = perf_counter()
@@ -135,12 +140,15 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Whisper model to benchmark (default: {DEFAULT_MODEL})",
     )
     parser.add_argument(
-        "--device", default="cuda", help="Inference device (default: cuda)"
+        "--device",
+        choices=DEVICE_CHOICES,
+        default="auto",
+        help="Inference device; auto prefers CUDA and falls back to CPU",
     )
     parser.add_argument(
         "--compute-type",
-        default="int8_float16",
-        help="CTranslate2 compute type (default: int8_float16)",
+        default="auto",
+        help="CTranslate2 compute type (default: auto)",
     )
     parser.add_argument(
         "--beam-size",
@@ -157,20 +165,22 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    from lecturebridge.runtime import ensure_cuda_runtime
-
+    args = build_parser().parse_args(argv)
     try:
-        ensure_cuda_runtime()
+        runtime = ensure_runtime(args.device, compute_type=args.compute_type)
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
-    args = build_parser().parse_args(argv)
+    if runtime.warning:
+        print(f"warning: {runtime.warning}", file=sys.stderr)
     try:
+        local_model = model_directory(args.model, download=True)
         result = transcribe_audio(
             args.audio,
             model_name=args.model,
-            device=args.device,
-            compute_type=args.compute_type,
+            model_path=local_model,
+            device=runtime.device,
+            compute_type=runtime.compute_type,
             beam_size=args.beam_size,
         )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:

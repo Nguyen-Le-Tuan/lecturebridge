@@ -18,6 +18,8 @@ def test_distil_large_v35_is_default() -> None:
     args = build_parser().parse_args(["audio.m4a"])
 
     assert args.model == "distil-large-v3.5"
+    assert args.device == "auto"
+    assert args.compute_type == "auto"
     assert args.beam_size == 5
 
 
