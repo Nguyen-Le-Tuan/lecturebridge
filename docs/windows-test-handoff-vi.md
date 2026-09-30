@@ -5,6 +5,9 @@ chưa phải bản phát hành công khai/classroom-ready. `main` chưa có các
 Không copy `.venv` từ Ubuntu sang Windows; model GPU/CPU chưa được chạy lại trong
 đợt triển khai này theo yêu cầu tránh làm quá tải máy.
 
+Dùng [mẫu báo cáo nghiệm thu](acceptance-report-template-vi.md) để ghi kết quả.
+Mục chưa thử ghi `CHƯA TEST`; không cần chạy bài nặng để điền đủ mẫu.
+
 ## 1. Lấy đúng code
 
 Nếu chưa có repo trên Windows, dùng PowerShell:
