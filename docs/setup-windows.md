@@ -31,7 +31,7 @@ this repository.
 ## 2. Clone and bootstrap
 
 ```powershell
-git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch ubuntu/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 Set-Location lecturebridge
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
 ```

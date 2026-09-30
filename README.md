@@ -12,7 +12,7 @@ iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper -> English captions
 The application prefers an NVIDIA GPU and safely falls back to CPU when CUDA
 is unavailable. Recordings and transcripts are not saved by default.
 
-This testing build lives on **`codex/local-studio`**. `main` does not yet contain
+This testing build lives on **`ubuntu/local-studio`**. `main` does not yet contain
 this release. See [Windows test handoff](docs/windows-test-handoff-vi.md).
 
 ## Local studio
@@ -64,7 +64,7 @@ instance can access its library; it is not a multi-account cloud service.
 Linux:
 
 ```bash
-git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch ubuntu/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 cd lecturebridge
 bash scripts/bootstrap-linux.sh
 ```
@@ -72,7 +72,7 @@ bash scripts/bootstrap-linux.sh
 Windows PowerShell:
 
 ```powershell
-git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch ubuntu/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 Set-Location lecturebridge
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
 ```

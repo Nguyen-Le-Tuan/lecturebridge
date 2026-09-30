@@ -73,7 +73,7 @@ Quy ước: `PASS` = đã thử và đúng; `FAIL` = đã thử nhưng sai;
 
 | Kiểm tra | Trạng thái | Kết quả hoặc lỗi |
 |---|---|---|
-| Lấy đúng nhánh `codex/local-studio` | ... | ... |
+| Lấy đúng nhánh `ubuntu/local-studio` | ... | ... |
 | `uv sync --locked` | ... | ... |
 | `uv run ruff check .` | ... | ... |
 | `uv run pytest -q -m "not gpu"` | ... | ... passed / ... skipped hoặc deselected |

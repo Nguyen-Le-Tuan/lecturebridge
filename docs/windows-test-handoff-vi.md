@@ -1,6 +1,6 @@
 # Lấy bản Local Studio và kiểm thử Windows
 
-Nhánh cần lấy: **`codex/local-studio`**. Đây là bản để nghiệm thu local,
+Nhánh cần lấy: **`ubuntu/local-studio`**. Đây là bản để nghiệm thu local,
 chưa phải bản phát hành công khai/classroom-ready. `main` chưa có các tính năng này.
 Không copy `.venv` từ Ubuntu sang Windows; model GPU/CPU chưa được chạy lại trong
 đợt triển khai này theo yêu cầu tránh làm quá tải máy.
@@ -13,7 +13,7 @@ Mục chưa thử ghi `CHƯA TEST`; không cần chạy bài nặng để điề
 Nếu chưa có repo trên Windows, dùng PowerShell:
 
 ```powershell
-git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch ubuntu/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 Set-Location lecturebridge
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
 ```
@@ -24,8 +24,8 @@ Nếu đã clone:
 Set-Location <thu-muc-repo-cua-ban>
 git status --short
 git fetch origin
-git switch codex/local-studio
-git pull --ff-only origin codex/local-studio
+git switch ubuntu/local-studio
+git pull --ff-only origin ubuntu/local-studio
 uv sync --locked
 ```
 

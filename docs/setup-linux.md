@@ -20,7 +20,7 @@ computer.
 ## 2. Clone and bootstrap
 
 ```bash
-git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch ubuntu/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 cd lecturebridge
 bash scripts/bootstrap-linux.sh
 ```
