@@ -44,7 +44,7 @@ Nếu có Node.js, kiểm tra resampler bằng dữ liệu số giả:
 node --test tests/test_worklet.cjs
 ```
 
-Xem UI với backend và microphone dữ liệu giả (không nhận diện giọng nói thật):
+Xem UI với backend dữ liệu giả (không nạp model hoặc nhận diện giọng nói thật):
 
 ```powershell
 $env:PYTHONPATH = "src"
@@ -52,7 +52,9 @@ uv run python tests/ui_server.py
 ```
 
 Mở `http://127.0.0.1:8765`. Server fixture này chỉ dành cho test, trả câu ví dụ
-khi nhận audio; thư viện nằm trong thư mục tạm và bị xóa khi đóng fixture bình thường.
+khi nhận audio. Nếu tự mở fixture trong trình duyệt, microphone vẫn là microphone
+thật của bạn; chỉ bài kiểm thử Playwright tự động mới cấp microphone giả. Thư viện
+nằm trong thư mục tạm và bị xóa khi đóng fixture bình thường.
 Dừng bằng `Ctrl+C`. Phiên thật dùng lệnh ở mục 4.
 
 ## 3. Bài GPU đầu tiên: nhỏ, có watchdog, chạy thủ công
