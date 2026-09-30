@@ -10,9 +10,23 @@ __pycache__/
 *.webm
 *.mp4
 models/
-data/
+nllb-200-distilled-600M-ctranslate2/
+data/private/
 outputs/
 benchmark-results/private/
+.huggingface/
+artifacts/
+*.srt
+*.vtt
+*.jsonl
+*.transcript.txt
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.log
+.idea/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 *.py[codz]

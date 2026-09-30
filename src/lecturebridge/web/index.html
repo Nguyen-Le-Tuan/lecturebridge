@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>LectureBridge · Theo kịp từng ý tưởng</title>
+    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/style.css" />
+    <script type="module" src="/assets/app.js"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="LectureBridge trang chủ"
+        ><img src="/assets/icon.svg" width="38" height="38" alt="" /><span
+          >Lecture<span class="brand-light">Bridge</span
+          ><small>KHÔNG GIAN HỌC TẬP</small></span
+        ></a
+      >
+      <nav aria-label="Điều hướng chính">
+        <button id="liveNav" class="nav-item selected" aria-current="page">
+          <span aria-hidden="true">◉</span> Trực tiếp
+          <span class="nav-dot"></span>
+        </button>
+        <button id="libraryNav" class="nav-item">
+          <span aria-hidden="true">▤</span> Thư viện
+          <span id="libraryCount" class="count">0</span>
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="privacy-mark">
+          <span aria-hidden="true">⌂</span>
+          <div>Không gian của bạn<small>Xử lý trên laptop cá nhân</small></div>
+        </div>
+        <p>Âm thanh chỉ được lưu khi bạn bật<br />“Lưu bản ghi” trước phiên.</p>
+        <button id="settingsButton" class="text-button">
+          ⚙ &nbsp; Cài đặt hiển thị
+        </button>
+        <div class="edition">LOCAL EDITION <span>v0.1</span></div>
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <div class="breadcrumb">
+          Không gian học tập <span>/</span>
+          <strong id="pageCrumb">Trực tiếp</strong>
+        </div>
+        <button
+          id="mobileSettings"
+          class="icon-button"
+          aria-label="Cài đặt hiển thị"
+        >
+          ⚙</button
+        ><span class="private-badge"><i></i> Local · Riêng tư</span>
+      </header>
+      <section id="liveView" class="view">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">NGHE. HIỂU. KẾT NỐI.</p>
+            <h1>Theo kịp từng ý tưởng.</h1>
+            <p class="subtitle">
+              Tập trung vào bài giảng. Để câu chữ ở đây giúp bạn.
+            </p>
+          </div>
+          <div class="date-chip" id="today"></div>
+        </div>
+        <div class="session-bar">
+          <label class="title-field"
+            ><span>TÊN PHIÊN HỌC</span
+            ><input
+              id="sessionTitle"
+              maxlength="120"
+              placeholder="Bài giảng mới"
+              aria-label="Tên phiên học" /></label
+          ><label class="save-choice"
+            ><input id="saveRecording" type="checkbox" role="switch" /><span
+              class="switch-track"
+            ></span
+            ><span
+              >Lưu bản ghi<small>Audio + transcript trên laptop</small></span
+            ></label
+          >
+        </div>
+        <div id="consentNote" class="notice" hidden>
+          Chỉ ghi âm khi bạn đã có sự cho phép phù hợp. Bản ghi được giữ trên
+          laptop đến khi bạn xóa.
+        </div>
+        <article class="reader">
+          <div class="reader-toolbar">
+            <div class="segment-control" role="group" aria-label="Chế độ đọc">
+              <button data-mode="en" aria-pressed="true">Tiếng Anh</button
+              ><button data-mode="vi" aria-pressed="false">Tiếng Việt</button
+              ><button data-mode="both" aria-pressed="false">Song ngữ</button>
+            </div>
+            <div class="reader-actions">
+              <button
+                id="smallerText"
+                class="icon-button"
+                aria-label="Giảm cỡ chữ"
+              >
+                A−</button
+              ><button
+                id="largerText"
+                class="icon-button"
+                aria-label="Tăng cỡ chữ"
+              >
+                A+</button
+              ><button
+                id="exportLive"
+                class="icon-button"
+                aria-label="Tải transcript TXT"
+                title="Tải transcript TXT"
+                disabled
+              >
+                ↓
+              </button>
+            </div>
+          </div>
+          <div
+            id="translationNotice"
+            class="translation-note"
+            role="status"
+            hidden
+          >
+            <span id="translationText"></span
+            ><button id="downloadTranslation" hidden>Tải bộ dịch</button>
+          </div>
+          <div
+            id="readerScroll"
+            class="reader-scroll"
+            tabindex="0"
+            aria-label="Nội dung transcript"
+          >
+            <div id="emptyState" class="empty-state">
+              <div class="sound-orbit">
+                <div class="sound-bars" aria-hidden="true">
+                  <b></b><b></b><b></b><b></b><b></b><b></b><b></b>
+                </div>
+              </div>
+              <h2>Một chỗ để bắt kịp mạch bài.</h2>
+              <p>
+                Bật microphone để thấy lời nói thành câu chữ.<br />Bạn có thể
+                chuyển sang tiếng Việt bất cứ lúc nào.
+              </p>
+              <div class="empty-tags">
+                <span>EN → VI</span><span>Không tự lưu audio</span>
+              </div>
+            </div>
+            <div id="transcriptLines" class="transcript-lines"></div>
+            <p id="partialText" class="partial-text"></p>
+          </div>
+          <button id="followLatest" class="follow-button" hidden>
+            ↓ Về nội dung mới
+          </button>
+          <div class="reader-footer">
+            <span
+              ><i class="legend-solid"></i> Đã chốt
+              <i class="legend-partial"></i> Đang nhận diện</span
+            ><span id="lagLabel">Sẵn sàng cho bài học của bạn</span>
+          </div>
+        </article>
+        <div class="capture-bar">
+          <div class="capture-info">
+            <span id="statusDot" class="status-dot"></span>
+            <div>
+              <strong id="sessionStatus" role="status">Sẵn sàng bắt đầu</strong
+              ><small id="recordingStatus"
+                >Microphone đang tắt · Chưa lưu bản ghi</small
+              >
+            </div>
+          </div>
+          <div class="capture-controls">
+            <meter
+              id="micLevel"
+              min="0"
+              max="1"
+              value="0"
+              aria-label="Mức microphone"
+            ></meter
+            ><time id="timer">00:00</time
+            ><button id="startStop" class="primary-button">
+              <span aria-hidden="true">●</span> Bắt đầu nghe
+            </button>
+          </div>
+        </div>
+        <p class="foreground-hint">
+          Giữ trang ở phía trước khi nghe trên iPad. Transcript có thể có sai
+          sót; một microphone không tách được lời nói chồng nhau.
+        </p>
+        <div id="sessionMessage" class="notice" role="status" hidden></div>
+      </section>
+      <section id="libraryView" class="view" hidden>
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">DÀNH CHO LẦN HIỂU SÂU HƠN.</p>
+            <h1>Thư viện của bạn.</h1>
+            <p class="subtitle">
+              Nghe lại những điều đáng nhớ, theo nhịp của riêng bạn.
+            </p>
+          </div>
+          <button id="refreshLibrary" class="secondary-button">
+            ↻ Làm mới
+          </button>
+        </div>
+        <div class="library-summary">
+          <span id="librarySummary">Đang tải…</span
+          ><span>Lưu trên laptop · Bạn quản lý việc xóa</span>
+        </div>
+        <div id="recordingList" class="recording-list"></div>
+        <div id="libraryEmpty" class="library-empty" hidden>
+          <span aria-hidden="true">▤</span>
+          <h2>Những bài học sẽ ở đây.</h2>
+          <p>Bật “Lưu bản ghi” trước khi bắt đầu phiên để nghe lại sau.</p>
+          <button id="newSession" class="secondary-button">
+            Về màn hình trực tiếp →
+          </button>
+        </div>
+        <article id="recordingDetail" class="recording-detail" hidden>
+          <div class="detail-heading">
+            <h2 id="detailTitle"></h2>
+            <button
+              id="closeDetail"
+              class="icon-button"
+              aria-label="Đóng bản ghi"
+            >
+              ×
+            </button>
+          </div>
+          <audio id="audioPlayer" controls preload="metadata"></audio>
+          <div class="detail-actions">
+            <button id="renameRecording" class="secondary-button">
+              Đổi tên</button
+            ><a id="downloadAudio" class="secondary-button">Tải WAV</a
+            ><a id="downloadTxt" class="secondary-button">TXT</a
+            ><a id="downloadJson" class="secondary-button">JSON</a
+            ><button id="deleteRecording" class="danger-button">
+              Xóa bản ghi
+            </button>
+          </div>
+          <p class="detail-hint">
+            Chọn một đoạn để nghe từ vị trí đó. Timestamp được căn theo đoạn
+            nhận diện.
+          </p>
+          <div id="detailTranscript" class="transcript-lines"></div>
+        </article>
+      </section>
+    </main>
+    <dialog id="settingsDialog">
+      <div class="dialog-heading">
+        <h2>Cài đặt hiển thị</h2>
+        <button
+          id="closeSettings"
+          class="icon-button"
+          aria-label="Đóng cài đặt"
+        >
+          ×
+        </button>
+      </div>
+      <label
+        >Giao diện<select id="themeSelect">
+          <option value="system">Theo hệ thống</option>
+          <option value="light">Sáng</option>
+          <option value="dark">Tối</option>
+        </select></label
+      ><label
+        >Microphone<select id="microphoneSelect">
+          <option value="">Mặc định của thiết bị</option>
+        </select></label
+      >
+      <p>
+        Danh sách microphone xuất hiện sau khi bạn cấp quyền. Chọn thiết bị
+        trước khi bắt đầu phiên.
+      </p>
+      <div class="settings-info" id="modelInfo"></div>
+      <p>
+        Bộ dịch NLLB chạy trên CPU, dành cho sử dụng local phi thương mại. Chỉ
+        tải khi bạn chủ động chọn.
+      </p>
+    </dialog>
+    <dialog id="editDialog">
+      <form id="editForm">
+        <h2>Đổi tên bản ghi</h2>
+        <label
+          >Tên phiên học<input id="editTitle" maxlength="120" required
+        /></label>
+        <div class="dialog-actions">
+          <button type="button" id="cancelEdit" class="secondary-button">
+            Hủy</button
+          ><button class="primary-button">Lưu tên</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="deleteDialog">
+      <h2>Xóa bản ghi này?</h2>
+      <p>
+        Audio, transcript và bản dịch của phiên sẽ bị xóa khỏi laptop. Thao tác
+        này không thể hoàn tác.
+      </p>
+      <div class="dialog-actions">
+        <button id="cancelDelete" class="secondary-button">Giữ lại</button
+        ><button id="confirmDelete" class="danger-button">Xóa vĩnh viễn</button>
+      </div>
+    </dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>
