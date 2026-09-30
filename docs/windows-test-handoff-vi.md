@@ -5,6 +5,8 @@ chưa phải bản phát hành công khai/classroom-ready. `main` chưa có các
 Không copy `.venv` từ Ubuntu sang Windows; model GPU/CPU chưa được chạy lại trong
 đợt triển khai này theo yêu cầu tránh làm quá tải máy.
 
+Dùng [hướng dẫn Windows fresh từng bước và F01–F20](windows-fresh-acceptance-vi.md)
+khi cài máy mới; hướng dẫn đó chỉ tải tiny trước lượt GPU đầu tiên.
 Dùng [mẫu báo cáo nghiệm thu](acceptance-report-template-vi.md) để ghi kết quả.
 Mục chưa thử ghi `CHƯA TEST`; không cần chạy bài nặng để điền đủ mẫu.
 
@@ -83,7 +85,7 @@ Muốn quan sát riêng ở cửa sổ PowerShell thứ hai:
 nvidia-smi --query-gpu=temperature.gpu,memory.used,memory.total,utilization.gpu --format=csv -l 1
 ```
 
-Yêu cầu thấy `Deep model smoke test: PASS` và chi tiết `tiny.en executed on cuda`.
+Yêu cầu thấy `[PASS] Deep model smoke test` và chi tiết `tiny.en executed on cuda`.
 Nếu fail hoặc watchdog dừng, dừng tại đây; giữ thông báo lỗi để chẩn đoán, không
 chuyển ngay sang model lớn. Một số kiểm tra preflight khác như Tailscale có thể
 fail riêng; đọc từng dòng thay vì coi đó là lỗi CUDA.

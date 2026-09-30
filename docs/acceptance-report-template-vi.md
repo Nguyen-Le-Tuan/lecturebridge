@@ -1,5 +1,8 @@
 # Báo cáo nghiệm thu LectureBridge Local Studio
 
+Hướng dẫn cài máy mới và thao tác cho từng F01–F20:
+[Windows fresh — nghiệm thu từng tiêu chí](windows-fresh-acceptance-vi.md).
+
 > Sao chép mẫu này rồi điền vào các dấu `...`. Mục chưa đo ghi `CHƯA ĐO`, mục
 > chưa thử ghi `CHƯA TEST`; không điền 0 hoặc PASS thay cho phần chưa kiểm tra.
 > Không cần chạy thêm bài nặng để điền đủ. Dừng ở bất kỳ bước nào nếu máy phản hồi kém.
