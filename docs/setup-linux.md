@@ -20,7 +20,7 @@ computer.
 ## 2. Clone and bootstrap
 
 ```bash
-git clone https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 cd lecturebridge
 bash scripts/bootstrap-linux.sh
 ```
@@ -34,6 +34,10 @@ If Tailscale has not been authenticated yet, sign in and rerun:
 ```bash
 uv run lecturebridge-preflight --device auto
 ```
+
+For a conservative first test, follow [the bounded tiny.en check](windows-test-handoff-vi.md).
+The following deep preflight uses the larger default model and should wait until
+that first test passes.
 
 ## 3. Prove GPU inference
 

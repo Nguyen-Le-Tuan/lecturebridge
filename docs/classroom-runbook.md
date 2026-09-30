@@ -46,7 +46,8 @@ tailnet. Use the resulting `https://...ts.net` URL only. Never enable Funnel.
 
 1. Open the HTTPS tailnet URL in Safari.
 2. Allow microphone access for that site.
-3. Keep Safari in the foreground and tap the red record button.
+3. Keep Safari in the foreground. Choose **Lưu bản ghi** only if you want to
+   retain audio on the laptop and have permission, then tap **Bắt đầu nghe**.
 4. Speak for 20-30 seconds before relying on the captions.
 5. Confirm an English line appears in under five seconds.
 
@@ -66,11 +67,8 @@ speech, so it remains disabled.
 
 ## Stop safely
 
-Tap the record button again and wait for:
-
-```text
-Finished processing audio! Ready to record again.
-```
+Tap **Dừng phiên** and wait for **Phiên học đã hoàn tất**. If recording was
+enabled, open **Thư viện** to play, download or delete it.
 
 Then stop the laptop process with `Ctrl+C`. Do not close Safari or the terminal
 while the button still indicates recording.
@@ -85,11 +83,15 @@ while the button still indicates recording.
 - Server unavailable: verify Tailscale on both devices, then rerun preflight.
 - Port occupied by another service: stop that service; do not bind WLK publicly.
 
-Optional Vietnamese translation can be started with
-`uv run lecturebridge-live --translation`. If it adds distracting delay, stop
-the server and restart with the default command.
+Choose **Tiếng Việt** or **Song ngữ** above the transcript to start translating
+new committed text without restarting. Missing translation weights require an
+explicit download. Select **Tiếng Anh** to stop submitting translation work.
+`--translation` remains available to download/prewarm the CPU worker at launch.
 
 ## After class
 
-Stop capture and the server. The MVP does not save audio or transcript by
-default. If a future version adds export, treat the exported file as private.
+Stop capture and wait for finalization before stopping the server. Saving is
+off by default and resets after each session. Saved audio, committed transcript
+and available translations remain on the laptop until explicitly deleted.
+Without saving, export any needed transcript before closing the page. Treat
+exports as private. See the local studio section of README for storage paths.

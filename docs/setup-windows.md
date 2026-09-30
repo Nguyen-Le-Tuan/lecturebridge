@@ -31,7 +31,7 @@ this repository.
 ## 2. Clone and bootstrap
 
 ```powershell
-git clone https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 Set-Location lecturebridge
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
 ```
@@ -43,6 +43,10 @@ modify GPU drivers, CUDA, cuDNN, Visual C++, or Tailscale.
 
 If PowerShell cannot find a newly installed program, close the terminal, open
 a new one, and rerun the script.
+
+For a conservative first test, follow [the bounded tiny.en check](windows-test-handoff-vi.md).
+The following deep preflight uses the larger default model and should wait until
+that first test passes.
 
 ## 3. Prove GPU inference
 

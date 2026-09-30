@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "codex/**"]
   pull_request:
   workflow_dispatch:
 
@@ -35,7 +35,13 @@ jobs:
         run: uv run ruff check .
 
       - name: Test
-        run: uv run pytest -q
+        run: uv run pytest -q -m "not gpu"
+        env:
+          CUDA_VISIBLE_DEVICES: "-1"
+          OMP_NUM_THREADS: "2"
+
+      - name: Check audio resampling without audio hardware
+        run: node --test tests/test_worklet.cjs
 
       - name: Build package
         run: uv build

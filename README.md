@@ -12,6 +12,32 @@ iPhone/iPad microphone -> Tailscale HTTPS -> Faster-Whisper -> English captions
 The application prefers an NVIDIA GPU and safely falls back to CPU when CUDA
 is unavailable. Recordings and transcripts are not saved by default.
 
+This testing build lives on **`codex/local-studio`**. `main` does not yet contain
+this release. See [Windows test handoff](docs/windows-test-handoff-vi.md).
+
+## Local studio
+
+- A Vietnamese reading interface with light/dark themes and adjustable text size.
+- Switch English / Vietnamese / bilingual while the microphone keeps running.
+- Enable **Lưu bản ghi** before a session to keep WAV audio and committed text on
+  the laptop. Recording is off again after each session.
+- A local library with playback, approximate segment seeking, rename, TXT/JSON
+  export, WAV download, and delete.
+- Audio is never saved when recording is off. Temporary transcripts can still
+  be exported before leaving the page.
+- Translation loads on demand in an isolated CPU worker; it only translates new
+  committed text. An explicit UI action is required to download missing weights.
+- One active microphone session per server, maximum two hours. Keep Safari in
+  the foreground. Disconnects retain received audio when saving was enabled;
+  automatic reconnect/resume is not included.
+
+Recordings live outside the repository: `%LOCALAPPDATA%\LectureBridge` on Windows
+and `${XDG_DATA_HOME:-~/.local/share}/lecturebridge` on Linux. Use `--data-dir` to
+choose another private directory. Data remains until you delete it; dual-boot
+systems do not automatically share their libraries. The laptop must stay on to
+browse recordings from an iPad. Anyone with access to this trusted local/tailnet
+instance can access its library; it is not a multi-account cloud service.
+
 ## What is included
 
 - High-accuracy English transcription with locked `distil-large-v3.5` weights.
@@ -38,7 +64,7 @@ is unavailable. Recordings and transcripts are not saved by default.
 Linux:
 
 ```bash
-git clone https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 cd lecturebridge
 bash scripts/bootstrap-linux.sh
 ```
@@ -46,7 +72,7 @@ bash scripts/bootstrap-linux.sh
 Windows PowerShell:
 
 ```powershell
-git clone https://github.com/Nguyen-Le-Tuan/lecturebridge.git
+git clone --branch codex/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
 Set-Location lecturebridge
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
 ```
@@ -99,7 +125,8 @@ uv run lecturebridge-models verify --model small.en
 uv run lecturebridge-models download --translation
 ```
 
-Translation is opt-in because it downloads a large non-commercial model:
+Use the on-screen language buttons for on-demand translation. To explicitly
+download and prewarm the non-commercial CPU model at launch:
 
 ```bash
 uv run lecturebridge-live --translation
@@ -124,16 +151,20 @@ uv run lecturebridge-transcribe data/private/example.m4a --device auto
 ```bash
 uv sync --locked
 uv run ruff check .
-uv run pytest -q
+uv run pytest -q -m "not gpu"
+node --test tests/test_worklet.cjs
 uv build
 uv run python scripts/check_repository.py
 ```
 
-The live GPU acceptance test is opt-in and requires a permitted audio file:
+GPU tests are disabled unless `--run-gpu` is supplied, even when the audio
+environment variable exists. Do not run the debate stress test for the first
+hardware check: start with the bounded `tiny.en` check in the Windows handoff.
+The optional debate acceptance test requires a permitted audio file:
 
 ```bash
 LECTUREBRIDGE_DEBATE_AUDIO=/path/to/permitted.wav \
-  uv run pytest -q tests/test_debate_stress.py
+  uv run pytest -q --run-gpu tests/test_debate_stress.py
 ```
 
 GitHub-hosted CI tests both Linux and Windows CPU-compatible code paths. GPU

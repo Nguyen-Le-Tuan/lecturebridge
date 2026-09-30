@@ -434,28 +434,38 @@ name = "lecturebridge"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "anyio" },
+    { name = "fastapi" },
     { name = "faster-whisper" },
+    { name = "filelock" },
     { name = "nvidia-cublas-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "uvicorn" },
     { name = "whisperlivekit", extra = ["translation"] },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "httpx" },
     { name = "pytest" },
     { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "anyio", specifier = ">=4.15.1" },
+    { name = "fastapi", specifier = ">=0.141.1" },
     { name = "faster-whisper", specifier = ">=1.2.1" },
+    { name = "filelock", specifier = ">=3.32.6" },
     { name = "nvidia-cublas-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", specifier = ">=12,<13" },
     { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", specifier = ">=9,<10" },
+    { name = "uvicorn", specifier = ">=0.52.4" },
     { name = "whisperlivekit", extras = ["translation"], specifier = "==0.2.26" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = ">=0.16.7" },
 ]

@@ -25,6 +25,10 @@ FORBIDDEN_SUFFIXES = (
     ".mp4",
     ".srt",
     ".vtt",
+    ".sqlite3",
+    ".sqlite3-journal",
+    ".sqlite3-wal",
+    ".sqlite3-shm",
 )
 SECRET_PATTERNS = (
     re.compile(rb"AKIA[0-9A-Z]{16}"),

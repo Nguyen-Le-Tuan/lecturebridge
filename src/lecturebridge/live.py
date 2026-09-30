@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -109,6 +108,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--port", type=int, default=8000, help="Loopback port (default: 8000)"
     )
+    parser.add_argument(
+        "--data-dir", type=Path, help="Private recording library directory"
+    )
     return parser
 
 
@@ -134,31 +136,32 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    executable = shutil.which("wlk")
-    if executable is None:
-        print("error: WhisperLiveKit is unavailable; run `uv sync` first", file=sys.stderr)
-        return 1
-
     if args.no_translation:
         print(
             "warning: --no-translation is deprecated; English-only is now the default",
             file=sys.stderr,
         )
 
-    command = build_wlk_command(
-        executable=executable,
-        model=args.model,
-        model_dir=asr_model_dir,
-        port=args.port,
-        translation_enabled=args.translation,
+    import uvicorn
+
+    from lecturebridge.backend import WLKBackend
+    from lecturebridge.server import create_app
+
+    app = create_app(
+        WLKBackend(args.model, asr_model_dir, runtime),
+        data_dir=args.data_dir,
+        translation_default=args.translation,
     )
-    if args.translation:
-        force_nllb_cpu()
-
-    from whisperlivekit.cli import main as wlk_main
-
-    sys.argv = command
-    wlk_main()
+    uvicorn.run(
+        app,
+        host="127.0.0.1",
+        port=args.port,
+        log_level="info",
+        access_log=False,
+        ws_max_size=65536,
+        ws_max_queue=8,
+        timeout_graceful_shutdown=10,
+    )
     return 0
 
 

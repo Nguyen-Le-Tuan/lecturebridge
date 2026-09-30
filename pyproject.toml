@@ -6,9 +6,13 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "anyio>=4.15.1",
+    "fastapi>=0.141.1",
     "faster-whisper>=1.2.1",
+    "filelock>=3.32.6",
     "nvidia-cublas-cu12>=12,<13; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "nvidia-cudnn-cu12>=9,<10; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "uvicorn>=0.52.4",
     "whisperlivekit[translation]==0.2.26",
 ]
 
@@ -24,6 +28,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "pytest>=9.1.1",
     "ruff>=0.16.7",
 ]

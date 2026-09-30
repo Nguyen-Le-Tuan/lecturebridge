@@ -1,5 +1,38 @@
 # Test evidence
 
+## Local Studio implementation — 2026-09-30
+
+This is a **software acceptance build**, not a classroom/GPU acceptance claim.
+The implementation deliberately did not load real ASR/NLLB models, run GPU deep
+preflight, benchmark, stress tests or a long soak test.
+
+Verified on Linux using the new source with fake ASR/translation backends:
+
+- Ruff lint: pass.
+- Python suite with `-m "not gpu"`: 51 passed, 1 GPU test deselected.
+- Node audio-worklet checks: 3 passed (16 kHz, 44.1 kHz, 48 kHz; bounded buffers,
+  PCM amplitude and final tail flush).
+- Chromium-family browser with GPU acceleration disabled and a fake microphone:
+  desktop 1440px, tablet 768px and phone 390px layouts; no horizontal overflow.
+- Browser end-to-end: microphone capture → committed transcript → enable bilingual
+  for new text only → stop → playback/seek → WAV/TXT/JSON export → rename/delete.
+  Also passed recording opt-out, dark theme and microphone-denied UI checks.
+- API tests: audio Range responses, same-origin protection, invalid input,
+  one active session, exclusive library lock, crash recovery, storage failure,
+  translation failure, and cancellation without stale translation replies.
+- Wheel/source build: pass; all five frontend assets included in the wheel.
+- GPU-watchdog thresholds tested as pure functions only. The watchdog was not run
+  against hardware.
+
+Screenshots are generated under ignored `artifacts/ui/`; they contain synthetic
+fixture text only. `tests/ui_server.py` creates a temporary library, never a model.
+The browser test uses a separate Playwright installation, not a runtime dependency.
+
+Remaining manual acceptance: native Windows installation, GPU smoke test,
+real NLLB output quality/latency, physical Safari/iPad microphone and background
+behavior, classroom audio accuracy and longer sessions when the owner chooses.
+Follow [Windows handoff](windows-test-handoff-vi.md), starting with tiny.en only.
+
 ## Cross-platform packaging baseline — 2026-09-28
 
 The public-release work added immutable model locks, automatic CUDA/CPU runtime
