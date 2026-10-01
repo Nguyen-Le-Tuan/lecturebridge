@@ -1,4 +1,4 @@
-"""Manual-only, bounded tiny.en/tiny GPU smoke check; never called by CI.
+"""User-triggered, bounded tiny.en/tiny GPU smoke check; never called by CI.
 
 This watchdog reduces exposure; it cannot prevent driver/power/OS failures.
 """
@@ -81,6 +81,7 @@ def main() -> int:
                 sys.executable,
                 "-m",
                 "lecturebridge.preflight",
+                "--local-only",
                 "--model",
                 model,
                 "--language",

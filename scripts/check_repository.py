@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_TRACKED_SIZE = 10 * 1024 * 1024
 FORBIDDEN_PREFIXES = (
     ".venv/",
+    ".tools/",
+    ".lecturebridge/",
     "data/private/",
     "models/",
     "nllb-200-distilled-600M-ctranslate2/",

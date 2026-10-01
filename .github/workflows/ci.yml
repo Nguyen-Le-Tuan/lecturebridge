@@ -51,20 +51,38 @@ jobs:
 
       - name: Check Bash syntax
         if: runner.os == 'Linux'
-        run: bash -n scripts/bootstrap-linux.sh
+        run: |
+          for file in Install.sh Start.sh installers/*.sh scripts/bootstrap-linux.sh; do bash -n "$file"; done
 
       - name: Check PowerShell syntax
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $tokens = $null
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile(
-            (Resolve-Path scripts/bootstrap-windows.ps1),
-            [ref]$tokens,
-            [ref]$errors
-          ) | Out-Null
-          if ($errors.Count -gt 0) {
-            $errors | Format-List | Out-String | Write-Error
-            exit 1
+          Get-ChildItem installers, scripts, tests -Filter '*.ps1' | ForEach-Object {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName, [ref]$tokens, [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) { throw ($errors | Out-String) }
           }
+
+      - name: Test Windows installer error handling
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./tests/test_windows_installer.ps1
+
+  installers:
+    name: Installer bundles
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build committed source bundles (no models)
+        run: python3 scripts/build_installers.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lecturebridge-installers
+          path: dist/installers/*
+          if-no-files-found: error
+          retention-days: 30

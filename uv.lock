@@ -444,6 +444,12 @@ dependencies = [
     { name = "whisperlivekit", extra = ["translation"] },
 ]
 
+[package.optional-dependencies]
+windows-cuda = [
+    { name = "nvidia-cublas-cu12", marker = "platform_machine == 'AMD64' and sys_platform == 'win32'" },
+    { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'AMD64' and sys_platform == 'win32'" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "httpx" },
@@ -458,10 +464,13 @@ requires-dist = [
     { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "filelock", specifier = ">=3.32.6" },
     { name = "nvidia-cublas-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", specifier = ">=12,<13" },
+    { name = "nvidia-cublas-cu12", marker = "platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'windows-cuda'", specifier = ">=12,<13" },
     { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", specifier = ">=9,<10" },
+    { name = "nvidia-cudnn-cu12", marker = "platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'windows-cuda'", specifier = ">=9,<10" },
     { name = "uvicorn", specifier = ">=0.52.4" },
     { name = "whisperlivekit", extras = ["translation"], specifier = "==0.2.26" },
 ]
+provides-extras = ["windows-cuda"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -659,6 +668,7 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/c0/0a517bfe63ccd3b92eb254d264e28fca3c7cab75d07daea315250fb1bf73/nvidia_cublas_cu12-12.9.2.10-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:e4f53a8ca8c5d6e8c492d0d0a3d565ecb59a751b19cfdaa4f6da0ab2104c1702", size = 581240110, upload-time = "2026-04-08T18:52:31.532Z" },
+    { url = "https://files.pythonhosted.org/packages/20/e2/fc9a0e985249d873150276d5afb02e39a66817fedbf1a385724393e505ed/nvidia_cublas_cu12-12.9.2.10-py3-none-win_amd64.whl", hash = "sha256:623f43027d40d44ceadf0043f002bd25cf353e8f13ce90b9a87057019f560661", size = 553162896, upload-time = "2026-04-08T18:53:10.035Z" },
 ]
 
 [[package]]
@@ -685,6 +695,7 @@ version = "12.9.86"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/85/e4af82cc9202023862090bfca4ea827d533329e925c758f0cde964cb54b7/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl", hash = "sha256:210cf05005a447e29214e9ce50851e83fc5f4358df8b453155d5e1918094dcb4", size = 89568129, upload-time = "2025-06-05T20:02:41.973Z" },
+    { url = "https://files.pythonhosted.org/packages/52/de/823919be3b9d0ccbf1f784035423c5f18f4267fb0123558d58b813c6ec86/nvidia_cuda_nvrtc_cu12-12.9.86-py3-none-win_amd64.whl", hash = "sha256:72972ebdcf504d69462d3bcd67e7b81edd25d0fb85a2c46d3ea3517666636349", size = 76408187, upload-time = "2025-06-05T20:12:27.819Z" },
 ]
 
 [[package]]
@@ -705,6 +716,7 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/18/d2/ac670e921b185ba348a7ba7dd490ef2aad9c3e1918a87553567be86e37f3/nvidia_cudnn_cu12-9.26.0.51-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:ce8603d4ea88d134be5a92c5e0833d513bea1ce0ee4bbc5d649fcb8718d51cbf", size = 770488318, upload-time = "2026-09-10T16:47:14.978Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/ee/baebebf270df5a57830e40879b4016de47ca43961095cf18b7749452150f/nvidia_cudnn_cu12-9.26.0.51-py3-none-win_amd64.whl", hash = "sha256:010abb90f513fc6e2b6e9278d56f594b87922fff80737434ab415da609db8311", size = 746465599, upload-time = "2026-09-10T16:50:17.867Z" },
 ]
 
 [[package]]

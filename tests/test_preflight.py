@@ -126,14 +126,15 @@ class _JsonResponse:
 
 
 def test_port_check_verifies_running_model(monkeypatch) -> None:
-    monkeypatch.setattr("lecturebridge.preflight.socket.socket", lambda *args: _OpenSocket())
+    monkeypatch.setattr(
+        "lecturebridge.preflight.socket.socket", lambda *args: _OpenSocket()
+    )
 
     def matching_urlopen(url: str, timeout: float) -> _JsonResponse:
         if url.endswith("/health"):
             return _JsonResponse({"ready": True})
-        return _JsonResponse(
-            {"data": [{"id": "faster-whisper/distil-large-v3.5"}]}
-        )
+        assert url.endswith("/api/capabilities")
+        return _JsonResponse({"model": "distil-large-v3.5"})
 
     monkeypatch.setattr("lecturebridge.preflight.urlopen", matching_urlopen)
     assert port_check(8123).passed
@@ -143,9 +144,33 @@ def test_port_check_verifies_running_model(monkeypatch) -> None:
         lambda url, timeout: (
             _JsonResponse({"ready": True})
             if url.endswith("/health")
-            else _JsonResponse({"data": [{"id": "faster-whisper/small.en"}]})
+            else _JsonResponse({"model": "small.en"})
         ),
     )
     mismatch = port_check(8123)
     assert not mismatch.passed
     assert "running model differs" in mismatch.detail
+
+
+def test_local_only_does_not_require_tailscale(monkeypatch, tmp_path):
+    from lecturebridge import preflight
+
+    for name in (
+        "python_check",
+        "package_check",
+        "gpu_check",
+        "executable_check",
+        "cache_check",
+        "port_check",
+    ):
+        monkeypatch.setattr(
+            preflight, name, lambda *a, **kw: Check("fake", PASS, "fake")
+        )
+    monkeypatch.setattr(
+        preflight, "tailscale_check", lambda: Check("Tailscale", FAIL, "missing")
+    )
+    assert all(
+        check.passed for check in preflight.collect_checks(tmp_path, local_only=True)
+    )
+    assert not all(check.passed for check in preflight.collect_checks(tmp_path))
+    assert preflight.main(["--local-only", "--peer", "test"]) == 2
