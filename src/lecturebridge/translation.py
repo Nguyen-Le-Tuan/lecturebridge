@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 
+from lecturebridge.languages import source_language
 from lecturebridge.model_store import (
     TRANSLATION_MODEL,
     load_locked_models,
@@ -16,7 +17,8 @@ from lecturebridge.model_store import (
 
 
 class TranslationService:
-    def __init__(self):
+    def __init__(self, language: str = "en"):
+        self.source_code = source_language(language).nllb
         self.state = "idle"
         self.process = None
         self.lock = asyncio.Lock()
@@ -84,7 +86,8 @@ class TranslationService:
             if self.state != "ready" or self.process is None:
                 raise RuntimeError("translation unavailable")
             try:
-                self.process.stdin.write((json.dumps({"text": text}) + "\n").encode())
+                request = {"text": text, "source_language": self.source_code}
+                self.process.stdin.write((json.dumps(request) + "\n").encode())
                 await self.process.stdin.drain()
                 line = await asyncio.wait_for(
                     self.process.stdout.readline(), timeout=30

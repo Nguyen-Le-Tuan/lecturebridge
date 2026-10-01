@@ -1,4 +1,4 @@
-"""Manual-only, bounded tiny.en GPU smoke check; never called by CI.
+"""Manual-only, bounded tiny.en/tiny GPU smoke check; never called by CI.
 
 This watchdog reduces exposure; it cannot prevent driver/power/OS failures.
 """
@@ -11,6 +11,8 @@ import shutil
 import subprocess
 import sys
 import time
+
+from lecturebridge.languages import LANGUAGES, validate_model_language
 
 MAX_SECONDS = 60
 MAX_TEMPERATURE = 75
@@ -49,7 +51,14 @@ def stop_reason(temperature: int, free_memory: int, elapsed: float) -> str | Non
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args()
+    parser.add_argument("--model", choices=("tiny.en", "tiny"))
+    parser.add_argument("--language", choices=tuple(LANGUAGES), default="en")
+    args = parser.parse_args()
+    model = args.model or ("tiny.en" if args.language == "en" else "tiny")
+    try:
+        validate_model_language(model, args.language)
+    except ValueError as exc:
+        parser.error(str(exc))
     process = None
     try:
         temperature, free_memory = read_gpu()
@@ -58,7 +67,8 @@ def main() -> int:
             print(f"Not started: {reason or 'let the GPU cool below 66 C first'}")
             return 1
         print(
-            "Manual GPU check: tiny.en only, one second of silence, no translation.",
+            f"Manual GPU check: {model}, language={args.language}, "
+            "one second of silence, no translation.",
             flush=True,
         )
         print(
@@ -72,7 +82,9 @@ def main() -> int:
                 "-m",
                 "lecturebridge.preflight",
                 "--model",
-                "tiny.en",
+                model,
+                "--language",
+                args.language,
                 "--device",
                 "cuda",
                 "--deep",

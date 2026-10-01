@@ -2,6 +2,9 @@
 
 Hướng dẫn cài máy mới và thao tác cho từng F01–F20:
 [Windows fresh — nghiệm thu từng tiêu chí](windows-fresh-acceptance-vi.md).
+Với Trung/Nhật/Hàn → Việt, dùng lệnh `--language` và model đa ngôn ngữ trong
+[README](../README.md#chọn-ngôn-ngữ-và-model-từ-nhẹ-đến-lớn); hướng dẫn Windows
+cũ dùng tiếng Anh làm ví dụ.
 
 > Sao chép mẫu này rồi điền vào các dấu `...`. Mục chưa đo ghi `CHƯA ĐO`, mục
 > chưa thử ghi `CHƯA TEST`; không điền 0 hoặc PASS thay cho phần chưa kiểm tra.
@@ -87,7 +90,7 @@ Quy ước: `PASS` = đã thử và đúng; `FAIL` = đã thử nhưng sai;
 Dán lỗi cài đặt/test nếu có, gồm lệnh đã chạy và phần traceback liên quan.
 ```
 
-## 4. GPU smoke test — chỉ tiny.en
+## 4. GPU smoke test — chỉ tiny.en hoặc tiny
 
 Chỉ thực hiện khi bạn sẵn sàng test GPU. Đóng server và ứng dụng GPU khác trước.
 Không bật dịch hoặc chạy thêm benchmark cùng lúc.
@@ -97,15 +100,24 @@ uv run lecturebridge-models download --model tiny.en
 uv run python scripts/gpu-smoke.py
 ```
 
-Script chỉ nạp `tiny.en` và xử lý 1 giây im lặng. Nó từ chối bắt đầu nếu nhiệt độ
+Với nguồn Trung/Nhật/Hàn, thay cặp lệnh trên bằng model `tiny` đa ngôn ngữ
+(chọn đúng `zh`, `ja` hoặc `ko`, không chạy cả hai lượt):
+
+```powershell
+uv run lecturebridge-models download --model tiny
+uv run python scripts/gpu-smoke.py --model tiny --language zh
+```
+
+Script chỉ nạp model tiny đã chọn và xử lý 1 giây im lặng. Nó từ chối bắt đầu nếu nhiệt độ
 trên 65°C; dừng nếu đạt 75°C, VRAM trống dưới 1024 MiB, quá 60 giây hoặc không
 đọc được cảm biến. Đây là ngưỡng bảo thủ của bài test, không phải bảo đảm máy
 không thể treo. Nếu script dừng hoặc có lỗi, ghi lại rồi **dừng tại đây**.
 
-- Tải/kiểm tra model tiny.en: PASS / FAIL / CHƯA TEST.
+- Model/language của smoke: tiny.en / tiny; en / zh / zh-Hant / ja / ko: ...
+- Tải/kiểm tra model: PASS / FAIL / CHƯA TEST.
 - Watchdog có cho bắt đầu inference không? Có / Không / Không rõ.
 - Dòng `Deep model smoke test`: PASS / FAIL / Không xuất hiện.
-- Dòng kết quả có ghi `tiny.en executed on cuda` không? ...
+- Dòng kết quả có ghi model đã chọn `executed on cuda` không? ...
 - Các dòng preflight khác bị WARN/FAIL (ví dụ Tailscale), tách khỏi lỗi GPU: ...
 - Kết thúc bằng: bình thường / watchdog / Ctrl+C / crash / khác: ...
 - Exit code ngay sau lệnh (`$LASTEXITCODE`): ...
@@ -127,11 +139,17 @@ Dán toàn bộ output của gpu-smoke.py ở đây, gồm thông báo watchdog 
 
 ## 5. Nhật ký từng phiên thật
 
-Chỉ tiếp tục nếu bài smoke test đã đạt và máy vẫn ổn định. Lượt đầu dùng tiếng Anh,
+Chỉ tiếp tục nếu bài smoke test đã đạt và máy vẫn ổn định. Lượt đầu chỉ xem bản gốc,
 không lưu audio, không bật dịch; nói trong 15–30 giây rồi bấm Dừng phiên.
 
 ```powershell
 uv run lecturebridge-live --device cuda --model tiny.en
+```
+
+Nếu thử nguồn khác tiếng Anh, thay lệnh trên, ví dụ tiếng Trung:
+
+```powershell
+uv run lecturebridge-live --device cuda --model tiny --language zh
 ```
 
 Mở `http://127.0.0.1:8000`. Server thật này **không có watchdog nhiệt độ**.
@@ -153,11 +171,12 @@ Dừng cửa sổ theo dõi bằng Ctrl+C sau test. Đơn vị VRAM là MiB, kh�
 - Ngày/giờ bắt đầu: ...
 - Lệnh khởi động server chính xác: `...`
 - Model và device đã yêu cầu: ...
+- Ngôn ngữ nguồn (`--language`): en / zh / zh-Hant / ja / ko: ...
 - Device thực tế xác nhận từ output: CUDA / CPU / CHƯA XÁC NHẬN.
 - Ứng dụng thật hay fixture? ...
 - Thiết bị mở UI và trình duyệt: ...
 - Kết nối: localhost / Tailscale HTTPS trực tiếp / Tailscale relay / Không rõ.
-- Chế độ: Anh / Việt / Song ngữ; đổi chế độ ở thời điểm nào: ...
+- Chế độ: Bản gốc / Việt / Song ngữ; đổi chế độ ở thời điểm nào: ...
 - Lưu bản ghi: Bật / Tắt.
 - Nguồn âm: Tôi tự nói / File của tôi / Nguồn được cho phép khác: ...
 - Accent, tốc độ nói, khoảng cách tới mic, tiếng ồn: ...
@@ -188,29 +207,29 @@ Dịch và iPad là các lượt **tùy chọn sau**, không phải điều ki�
 |---|---|---|---|
 | F01 | Mở UI, chữ và nút không chồng/tràn màn hình | CHƯA TEST | ... |
 | F02 | Xin quyền mic, Bắt đầu/Dừng hoạt động, Stop tắt mic | CHƯA TEST | ... |
-| F03 | Tiếng Anh xuất hiện và được giữ sau khi Dừng | CHƯA TEST | ... |
+| F03 | Transcript đúng ngôn ngữ nguồn xuất hiện và được giữ sau khi Dừng | CHƯA TEST | ... |
 | F04 | Tắt lưu: không có bản ghi mới trong Thư viện | CHƯA TEST | ... |
 | F05 | Không lưu vẫn tải được TXT của phiên trước khi rời trang | CHƯA TEST | ... |
 | F06 | Lượt riêng bật lưu: có chỉ báo đang lưu và xuất hiện bản ghi khi Dừng | CHƯA TEST | ... |
 | F07 | Nghe lại: audio nghe được, đúng giọng/nội dung, không méo hoặc mất đoạn bất thường | CHƯA TEST | ... |
 | F08 | Thời lượng file audio gần bằng thời lượng capture; ghi chênh lệch cụ thể | CHƯA TEST | ... |
 | F09 | Tua audio và bấm timestamp của transcript tới gần đoạn tương ứng | CHƯA TEST | ... |
-| F10 | WAV/TXT/JSON tải được; mở file thấy đúng nội dung và dấu tiếng Việt | CHƯA TEST | ... |
+| F10 | WAV/TXT/JSON tải được; mở file giữ đúng chữ nguồn (kể cả Trung/Nhật/Hàn) và dấu tiếng Việt | CHƯA TEST | ... |
 | F11 | Đổi tên; tải lại trang vẫn thấy tên và bản ghi | CHƯA TEST | ... |
 | F12 | Xóa bản ghi thử nghiệm; audio/transcript không còn truy cập được qua UI | CHƯA TEST | ... |
 | F13 | Kết thúc phiên: “Lưu bản ghi” tự trở về tắt cho phiên kế tiếp | CHƯA TEST | ... |
 | F14 | Sáng/tối và tăng/giảm cỡ chữ hoạt động | CHƯA TEST | ... |
 | F15 | Cuộn lên đọc lại không bị kéo xuống; nút “Về nội dung mới” hoạt động | CHƯA TEST | ... |
 | F16 | Dịch tùy chọn: thiếu model thì đề nghị tải, không tự tải trước khi đồng ý | CHƯA TEST | ... |
-| F17 | Dịch tùy chọn: đổi Anh → Song ngữ không reset transcript/ngắt mic | CHƯA TEST | ... |
+| F17 | Dịch tùy chọn: đổi bản gốc → Song ngữ không reset transcript/ngắt mic | CHƯA TEST | ... |
 | F18 | Dịch tùy chọn: phần mới có bản Việt; phần trước khi bật không bị dịch bù | CHƯA TEST | ... |
-| F19 | Dịch tùy chọn: về Anh ngừng gửi việc dịch mới, giữ nội dung đã có | CHƯA TEST | ... |
+| F19 | Dịch tùy chọn: về bản gốc ngừng gửi việc dịch mới, giữ nội dung đã có | CHƯA TEST | ... |
 | F20 | iPad tùy chọn: mic hoạt động qua HTTPS Tailscale và UI dùng được dọc/ngang | CHƯA TEST | ... |
 
 ### Chất lượng nội dung — nếu có mẫu ngắn được phép chia sẻ
 
-Không cần đính kèm toàn bộ audio. Với tiny.en, đây là kiểm tra luồng và lỗi thô;
-không suy ra chất lượng của model mặc định từ kết quả tiny.en.
+Không cần đính kèm toàn bộ audio. Với tiny.en/tiny, đây là kiểm tra luồng và lỗi thô;
+không suy ra chất lượng của model lớn từ kết quả tiny.
 
 - Mẫu thuộc phiên: ...
 - Loại nội dung: Câu tự đọc / Bài giảng / Hội thoại / Khác: ...
@@ -243,8 +262,8 @@ Bộ dịch chạy CPU nhưng vẫn dùng RAM/CPU đáng kể; có thể hoãn l
 - Phiên: ...
 - Bộ dịch: có sẵn / tôi đã chủ động bấm tải / chưa tải.
 - Từ lúc bật dịch tới trạng thái sẵn sàng: ... giây / CHƯA ĐO.
-- Từ lúc câu Anh được chốt tới lúc có bản Việt: ... giây / CHƯA ĐO.
-- Độ trễ transcript Anh trước và sau bật dịch: ... / ... giây / CHƯA ĐO.
+- Từ lúc câu nguồn được chốt tới lúc có bản Việt: ... giây / CHƯA ĐO.
+- Độ trễ transcript nguồn trước và sau bật dịch: ... / ... giây / CHƯA ĐO.
 - RAM trước và sau bật dịch: ... / ... GB / CHƯA ĐO.
 - CPU % quan sát được, nếu có: ...
 - Model ASR dùng trong lượt dịch này: ...

@@ -59,7 +59,7 @@ def test_live_translation_is_explicit_opt_in() -> None:
 
 def test_live_parser_rejects_unknown_model() -> None:
     with pytest.raises(SystemExit):
-        build_parser().parse_args(["--model", "large-v3"])
+        build_parser().parse_args(["--model", "unknown-model"])
 
 
 def test_live_command_uses_locked_model_directory(tmp_path) -> None:

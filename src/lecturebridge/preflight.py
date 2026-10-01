@@ -17,6 +17,7 @@ from urllib.request import urlopen
 
 from huggingface_hub.constants import HF_HUB_CACHE
 
+from lecturebridge.languages import LANGUAGES, source_language, validate_model_language
 from lecturebridge.model_store import (
     TRANSLATION_MODEL,
     load_locked_models,
@@ -158,9 +159,12 @@ def cache_check(
     return Check("Model cache", PASS if ready else FAIL, detail)
 
 
-def deep_model_check(model: str, runtime: RuntimeSelection) -> Check:
+def deep_model_check(
+    model: str, runtime: RuntimeSelection, language: str = "en"
+) -> Check:
     """Load and execute the model to catch dynamic CUDA library failures."""
     try:
+        validate_model_language(model, language)
         import numpy as np
         from faster_whisper import WhisperModel
 
@@ -169,7 +173,9 @@ def deep_model_check(model: str, runtime: RuntimeSelection) -> Check:
             str(path), device=runtime.device, compute_type=runtime.compute_type
         )
         segments, _ = loaded.transcribe(
-            np.zeros(16000, dtype=np.float32), language="en", beam_size=1
+            np.zeros(16000, dtype=np.float32),
+            language=source_language(language).whisper,
+            beam_size=1,
         )
         list(segments)
     except (ImportError, OSError, RuntimeError, ValueError) as exc:
@@ -240,6 +246,9 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Expected ASR model (default: {DEFAULT_MODEL})",
     )
     parser.add_argument(
+        "--language", choices=tuple(LANGUAGES), default="en", help="Spoken language"
+    )
+    parser.add_argument(
         "--device",
         choices=DEVICE_CHOICES,
         default="auto",
@@ -248,7 +257,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--translation",
         action="store_true",
-        help="Also require the optional English-to-Vietnamese translation model",
+        help="Also require the optional source-to-Vietnamese translation model",
     )
     parser.add_argument(
         "--deep",
@@ -272,6 +281,7 @@ def collect_checks(
     deep: bool = False,
     peer: str | None = None,
     port: int = 8000,
+    language: str = "en",
 ) -> list[Check]:
     project_root = root or repo_root()
     checks = [
@@ -290,7 +300,7 @@ def collect_checks(
     if peer:
         checks.insert(-1, peer_check(peer))
     if deep and runtime is not None:
-        checks.insert(-1, deep_model_check(model, runtime))
+        checks.insert(-1, deep_model_check(model, runtime, language))
     return checks
 
 
@@ -298,6 +308,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if not 1 <= args.port <= 65535:
         print("error: port must be between 1 and 65535", file=sys.stderr)
+        return 2
+    try:
+        validate_model_language(args.model, args.language)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 2
     try:
         runtime = ensure_runtime(args.device)
@@ -313,6 +328,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         deep=args.deep,
         peer=args.peer,
         port=args.port,
+        language=args.language,
     )
     for check in checks:
         print(f"[{check.status}] {check.name}: {check.detail}")

@@ -288,7 +288,19 @@ def test_cpu_only_translation_process_contract(monkeypatch):
     asyncio.run(run())
 
 
-def test_backend_passes_selected_runtime_without_loading_weights(monkeypatch, tmp_path):
+@pytest.mark.parametrize(
+    "model,language,whisper_code",
+    [
+        ("tiny.en", "en", "en"),
+        ("tiny", "zh", "zh"),
+        ("tiny", "zh-Hant", "zh"),
+        ("tiny", "ja", "ja"),
+        ("tiny", "ko", "ko"),
+    ],
+)
+def test_backend_passes_selected_runtime_without_loading_weights(
+    monkeypatch, tmp_path, model, language, whisper_code
+):
     import faster_whisper
     import whisperlivekit
     from whisperlivekit.local_agreement.backends import FasterWhisperASR
@@ -307,13 +319,14 @@ def test_backend_passes_selected_runtime_without_loading_weights(monkeypatch, tm
     def fake_engine(**kwargs):
         assert kwargs["backend_policy"] == "localagreement"
         assert not kwargs["target_language"]
+        assert kwargs["lan"] == whisper_code
         FasterWhisperASR.load_model(None)
         return object()
 
     monkeypatch.setattr(faster_whisper, "WhisperModel", fake_model)
     monkeypatch.setattr(whisperlivekit, "TranscriptionEngine", fake_engine)
     runtime = RuntimeSelection("cpu", "cpu", "int8", "test")
-    backend = WLKBackend("tiny.en", tmp_path, runtime)
+    backend = WLKBackend(model, tmp_path, runtime, language=language)
     asyncio.run(backend.start())
     assert captured["device"] == "cpu"
     assert captured["compute_type"] == "int8"

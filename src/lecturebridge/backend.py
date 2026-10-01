@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import asyncio
 
+from lecturebridge.languages import source_language, validate_model_language
+
 
 class WLKBackend:
-    def __init__(self, model: str, model_dir, runtime):
+    def __init__(self, model: str, model_dir, runtime, language: str = "en"):
+        validate_model_language(model, language)
         self.model = model
+        self.language = language
         self.model_dir = model_dir
         self.runtime = runtime
         self.engine = None
@@ -43,7 +47,7 @@ class WLKBackend:
                 backend_policy="localagreement",
                 model_size=self.model,
                 model_dir=str(self.model_dir),
-                lan="en",
+                lan=source_language(self.language).whisper,
                 pcm_input=True,
                 pause_segmentation_seconds=1.2,
                 diarization=False,

@@ -10,6 +10,7 @@ from lecturebridge.model_store import (
     selected_model_names,
     verify_snapshot,
 )
+from lecturebridge.models import MODEL_BY_NAME
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,14 +18,11 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_lock_manifest_contains_all_supported_models() -> None:
     locked = load_locked_models()
 
-    assert {
-        "distil-large-v3.5",
-        "small.en",
-        "base.en",
-        "tiny.en",
-        "nllb-200-distilled-600M",
-    } == set(locked)
+    assert {*MODEL_BY_NAME, "nllb-200-distilled-600M"} == set(locked)
     assert all(len(model.revision) == 40 for model in locked.values())
+    for name, spec in MODEL_BY_NAME.items():
+        assert locked[name].repository == spec.repository
+        assert locked[name].revision == spec.revision
 
 
 def test_packaged_lock_manifest_matches_repository_manifest() -> None:

@@ -15,7 +15,8 @@ def seconds(value: str | float | None) -> float:
 
 
 class Transcript:
-    def __init__(self):
+    def __init__(self, language: str = "en"):
+        self.language = language
         self.segments: list[dict] = []
         self.pending: dict | None = None
         self.seen: dict[str, tuple[str, float]] = {}
@@ -58,6 +59,7 @@ class Transcript:
                     "start": previous_end,
                     "end": end,
                     "text": "",
+                    "language": self.language,
                     "translation": None,
                     "translation_status": "pending"
                     if self.translation_enabled
@@ -68,7 +70,9 @@ class Transcript:
             self.pending["text"] += addition
             self.pending["end"] = end
             if (
-                re.search(r"[.!?][\s\"\u201d]*$", self.pending["text"])
+                re.search(
+                    r"[.!?。！？][\s\"\u201d\u300d\u300f]*$", self.pending["text"]
+                )
                 or end - self.pending["start"] >= 8
                 or len(self.pending["text"]) >= 400
             ):
