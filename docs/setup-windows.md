@@ -1,10 +1,13 @@
 # Windows setup
 
-Use Windows 10/11 x86-64. Download the Windows bundle from the project owner or a
-successful CI run, extract it completely, and double-click `Install.cmd`.
-No Git, global Python, CUDA Toolkit, or global PATH changes are required.
-See [the main installation guide](../README.md#install-on-a-new-computer) for
-hardware selection, download sizes, supported languages, and model commands.
+Download the Windows archive from
+[Releases](https://github.com/Nguyen-Le-Tuan/lecturebridge/releases), or use the
+archive shared with you. On Windows 10/11 x86-64, extract it completely into a
+writable folder and double-click `Install.cmd`.
+
+Install sets up Python and the required libraries. For profile options and
+automatic model selection, see the [installation reference](installation.md).
+For supported languages and model commands, see the [model guide](models.md).
 
 Setup installs private uv/Python dependencies and, for eligible NVIDIA hardware,
 private CUDA/cuDNN libraries. A missing Microsoft Visual C++ x64 runtime is
@@ -38,10 +41,8 @@ To select a CPU-only installation:
 - On failure, read `.lecturebridge\setup.log`. Start remains blocked until
   setup completes. Do not manually remove the incomplete-install marker.
 - If port 8000 is occupied, close the other server first.
-- For GPU issues, rerun with `-Profile cpu`. A system driver update remains an
-  explicit user decision; the installer will not reboot or replace it.
+- For GPU issues, rerun with `-Profile cpu`. GPU driver updates are handled separately from the application installer.
 - To update, extract a new bundle into a separate directory and run Install
   there. Existing recordings in `%LOCALAPPDATA%\LectureBridge` are retained.
 
-The application UI is Vietnamese; installer output and the README are English.
 Tailscale is needed only for another device to reach the server over HTTPS.

@@ -1,5 +1,10 @@
 # LectureBridge: Chiến lược Freemium cho Du học sinh
 
+> Archived planning document, dated 15 September 2026. The original Vietnamese
+> proposal and its assumptions are preserved below. Proposed prices, cloud
+> services, and milestones are not current product features or commitments.
+> For the available application, see the [README](../../README.md).
+
 **Báo cáo gửi:** Giám đốc điều hành  
 **Ngày:** 15 tháng 9 năm 2026  
 **Phiên bản:** 1.0 - Quyết định cho private alpha 90 ngày  

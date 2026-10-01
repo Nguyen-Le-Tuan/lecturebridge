@@ -7,7 +7,7 @@ file is a summary, not a replacement for their license texts or model cards.
 
 - Project: <https://github.com/QuentinFuxa/WhisperLiveKit>
 - License: Apache License 2.0
-- Role: streaming ASR server, WebSocket protocol, and bundled web UI
+- Role: streaming speech-recognition engine and PCM audio processing
 
 ## Faster-Whisper and CTranslate2
 
@@ -23,7 +23,7 @@ file is a summary, not a replacement for their license texts or model cards.
 - Model: <https://huggingface.co/distil-whisper/distil-large-v3.5>
 - CTranslate2 weights: <https://huggingface.co/distil-whisper/distil-large-v3.5-ct2>
 - License: MIT
-- Role: default high-accuracy English ASR model
+- Role: English ASR model and advanced CLI default
 
 ## NLLB-200 distilled 600M
 
@@ -34,9 +34,9 @@ file is a summary, not a replacement for their license texts or model cards.
 - Role: optional English/Chinese/Japanese/Korean-to-Vietnamese translation
   through the isolated CPU CTranslate2 worker
 
-The NLLB weights are restricted to non-commercial use. Do not describe this
-MVP as commercially licensed, and review the current model card and license
-before any distribution or commercial deployment.
+The NLLB weights are restricted to non-commercial use. LectureBridge's MIT
+license does not grant commercial rights to those weights. Their model card
+and license define the permitted uses.
 
 ## Multilingual Whisper models
 
@@ -49,5 +49,4 @@ before any distribution or commercial deployment.
 - Immutable revisions and file checksums are recorded in both model manifests.
   For the added models, large-file SHA-256 values come from Hugging Face LFS metadata;
   small config/tokenizer/vocabulary files were hashed directly. Every model download
-  verifies the actual local files before use. No new model inference was performed
-  during implementation.
+  verifies the actual local files before use.

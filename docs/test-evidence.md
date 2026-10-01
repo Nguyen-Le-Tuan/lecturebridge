@@ -1,10 +1,14 @@
-# Test evidence
+# Test history
+
+Results below describe the builds and environments tested on the stated dates.
+They do not establish acceptance of every later release. For a new test run,
+use the [testing guide](testing.md) and [report template](acceptance-report-template.md).
 
 ## Local Studio implementation — 2026-09-30
 
-This is a **software acceptance build**, not a classroom/GPU acceptance claim.
-The implementation deliberately did not load real ASR/NLLB models, run GPU deep
-preflight, benchmark, stress tests or a long soak test.
+This round covered application behavior with fake ASR and translation backends.
+It did not include real model inference, GPU preflight, benchmarks, or long
+sessions.
 
 Verified on Linux using the new source with fake ASR/translation backends:
 
@@ -121,7 +125,7 @@ opt-in rather than the default.
   - processed 15.01 seconds of audio in 16.59 seconds;
   - produced no translation and completed with `ready_to_stop`.
 - The repeatable opt-in GPU acceptance test passed in 22.55 seconds.
-- The normal suite currently reports 20 passed and one GPU test skipped unless
+- At the time of this run, the normal suite reported 20 passed and one GPU test skipped unless
   `LECTUREBRIDGE_DEBATE_AUDIO` is supplied.
 
 ## Optional translation compatibility

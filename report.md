@@ -1,7 +1,11 @@
 # Báo cáo nghiệm thu LectureBridge Local Studio
 
+> Historical report from the September 2026 Windows test. Observations below
+> are preserved as submitted and are not a statement of current release status.
+> For a new report, use the [current template](docs/acceptance-report-template.md).
+
 Hướng dẫn cài máy mới và thao tác cho từng F01–F20:
-[Windows fresh — nghiệm thu từng tiêu chí](windows-fresh-acceptance-vi.md).
+[Windows fresh — nghiệm thu từng tiêu chí](docs/windows-fresh-acceptance-vi.md).
 
 > Sao chép mẫu này rồi điền vào các dấu `...`. Mục chưa đo ghi `CHƯA ĐO`, mục
 > chưa thử ghi `CHƯA TEST`; không điền 0 hoặc PASS thay cho phần chưa kiểm tra.

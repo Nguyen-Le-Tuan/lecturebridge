@@ -1,6 +1,6 @@
 # Local Studio architecture
 
-`lecturebridge-live` retains runtime/model verification and now starts a
+`lecturebridge-live` verifies the runtime and model, then starts a
 LectureBridge-owned FastAPI app on loopback. `WLKBackend` uses the pinned WLK
 engine and its PCM processor. A scoped constructor hook supplies the selected
 CUDA/CPU device and compute type because WLK 0.2.26 otherwise uses `auto` for both.
@@ -33,7 +33,7 @@ two CPU threads, one worker and bounded decoding. The tokenizer and weights come
 from the same verified immutable snapshot; it does not fetch an extra unpinned
 Facebook tokenizer. Model preparation is lazy and disk/network work stays off
 the event loop. Missing models require explicit download via UI (or the existing
-`--translation` startup opt-in). English transcription continues during preparation.
+`--translation` startup opt-in). Source-language transcription continues during preparation.
 
 Cumulative committed WLK lines become paragraphs, finalized at punctuation,
 line boundaries or a bounded length/time interval. A mode change flushes the
@@ -43,13 +43,14 @@ shown per paragraph; it never creates an unbounded work backlog. A stop drains
 translation for at most five seconds, then marks remaining work untranslated.
 A cancelled translation request terminates its worker so a stale reply cannot
 be attached to the next paragraph. The CPU model may stay resident between
-sessions until server exit; changing to English stops new translation work.
+sessions until server exit; changing to original-language mode stops new translation work.
 
-This is a single-owner trusted tailnet app, not an authenticated public service.
+The app is designed for a single owner and trusted tailnet access. It has no
+separate user accounts.
 Host/origin checks reject cross-site access; there is no CORS wildcard, and CSP,
 no-store and no-referrer headers apply. It must not be exposed through Funnel or
 an internet-facing reverse proxy. Logs do not intentionally include transcript
-content. Model loading/inference is never part of the UI/API test fixtures.
+content. UI/API test fixtures use fake models.
 
 ## Lightweight validation
 

@@ -29,6 +29,17 @@ FILES = {
     "docs/setup-windows.md",
     "docs/classroom-runbook.md",
     "docs/troubleshooting.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "docs/installation.md",
+    "docs/models.md",
+    "docs/how-it-works.md",
+    "docs/testing.md",
+    "docs/acceptance-report-template.md",
+    "docs/local-studio-architecture.md",
+    "docs/release-checklist.md",
+    "docs/test-evidence.md",
+    "docs/windows-test-handoff-vi.md",
 }
 PREFIXES = ("src/lecturebridge/", "installers/")
 REQUIRED = FILES | {

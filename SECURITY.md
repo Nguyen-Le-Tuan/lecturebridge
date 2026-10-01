@@ -1,22 +1,23 @@
-# Security policy
+# Security
 
-## Supported version
+Security fixes target the current `main` branch.
 
-Security fixes currently target the latest commit on `main`.
+## Report a vulnerability
 
-## Reporting a vulnerability
+Use the repository's private vulnerability reporting channel for security or
+privacy issues. Include the affected version, reproduction steps, and expected
+impact. Avoid public issues for exposed credentials or a vulnerability that
+could affect other users. Revoke any exposed credentials promptly.
 
-Do not open a public issue for a suspected vulnerability, credential exposure,
-or privacy incident. Use GitHub's private vulnerability reporting feature for
-this repository. Include the affected version, reproduction steps, impact, and
-any suggested mitigation.
+Reports should contain only the details needed to reproduce the issue. Leave
+out private audio, transcripts, Tailscale credentials, and access tokens.
 
-Never include classroom audio, transcripts, Tailscale credentials, Hugging
-Face tokens, or other personal data in a report. Revoke exposed credentials
-before reporting them.
+## Deployment scope
 
-## Security boundaries
+LectureBridge listens on `127.0.0.1`. Tailscale Serve provides HTTPS access for
+trusted devices in a tailnet. Public internet hosting and Tailscale Funnel are
+unsupported.
 
-LectureBridge binds its application server to `127.0.0.1`. Tailscale Serve is
-the supported way to provide HTTPS access inside a tailnet. Tailscale Funnel
-and direct public binding are outside the supported configuration.
+The application has one shared recording library and no separate user accounts.
+Anyone who can reach the instance can access that library. Restrict tailnet
+access accordingly and keep the host computer's user account secure.

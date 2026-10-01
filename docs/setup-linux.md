@@ -1,7 +1,9 @@
 # Ubuntu setup
 
-Use Ubuntu 22.04/24.04 x86-64. Extract the Ubuntu bundle from the project owner or
-a successful CI run into a permanent writable directory. Open a terminal there:
+Download the Ubuntu archive from
+[Releases](https://github.com/Nguyen-Le-Tuan/lecturebridge/releases), or use the
+archive shared with you. On Ubuntu 22.04/24.04 x86-64, extract it into a permanent
+writable directory and open a terminal there:
 
 ```bash
 bash Install.sh
@@ -14,9 +16,10 @@ uv/Python and locked application dependencies. It installs missing `curl`,
 GPU drivers are not installed or modified. Private Linux CUDA runtime packages
 are included in the locked dependencies even on a CPU-only installation.
 
-See [the main installation guide](../README.md#install-on-a-new-computer) for
-hardware selection, downloads, languages, and model commands. Ubuntu derivatives
-may work; other Linux distributions require their own prerequisite setup.
+The [installation reference](installation.md) covers profiles and automatic
+model selection; the [model guide](models.md) lists languages and launch commands.
+Ubuntu derivatives may work. Other Linux distributions require their own
+prerequisite setup.
 
 To force CPU and choose Japanese:
 
@@ -45,4 +48,4 @@ bash Start.sh --language zh
   `${XDG_DATA_HOME:-~/.local/share}/lecturebridge` until explicitly deleted.
 
 Tailscale is optional for localhost use. Follow the classroom runbook only if
-connecting a phone/tablet. The app UI remains Vietnamese.
+connecting a phone/tablet.
