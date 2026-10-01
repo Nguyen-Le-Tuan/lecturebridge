@@ -152,8 +152,10 @@ def cache_check(
     translation_ready = not translation_failures
     ready = asr_ready and (translation_ready or not translation_enabled)
     nllb_detail = (
-        "ready" if translation_ready else "; ".join(translation_failures)
-    ) if translation_enabled else "not required (EN-only)"
+        ("ready" if translation_ready else "; ".join(translation_failures))
+        if translation_enabled
+        else "not required (source-only)"
+    )
     asr_detail = "ready" if asr_ready else "; ".join(asr_failures)
     detail = f"ASR {model}={asr_detail}, NLLB={nllb_detail}"
     return Check("Model cache", PASS if ready else FAIL, detail)
@@ -205,25 +207,21 @@ def port_check(port: int = 8000, expected_model: str = DEFAULT_MODEL) -> Check:
         return Check(check_name, FAIL, "service is not ready")
 
     try:
-        with urlopen(f"http://127.0.0.1:{port}/v1/models", timeout=1) as response:
+        with urlopen(
+            f"http://127.0.0.1:{port}/api/capabilities", timeout=1
+        ) as response:
             model_payload = json.load(response)
     except (OSError, URLError, json.JSONDecodeError):
         return Check(check_name, FAIL, "could not verify the running ASR model")
 
-    model_ids = {
-        item.get("id")
-        for item in model_payload.get("data", [])
-        if isinstance(item, dict)
-    }
-    expected_id = f"faster-whisper/{expected_model}"
-    model_matches = expected_id in model_ids
+    model_matches = model_payload.get("model") == expected_model
     return Check(
         check_name,
         PASS if model_matches else FAIL,
         (
             f"LectureBridge is ready with {expected_model}"
             if model_matches
-            else f"running model differs; expected {expected_id}"
+            else f"running model differs; expected {expected_model}"
         ),
     )
 
@@ -266,6 +264,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--peer", help="Optional Tailscale device name to ping")
     parser.add_argument(
+        "--local-only",
+        action="store_true",
+        help="Skip Tailscale checks for use on this computer",
+    )
+    parser.add_argument(
         "--port", type=int, default=8000, help="Expected local port (default: 8000)"
     )
     return parser
@@ -282,6 +285,7 @@ def collect_checks(
     peer: str | None = None,
     port: int = 8000,
     language: str = "en",
+    local_only: bool = False,
 ) -> list[Check]:
     project_root = root or repo_root()
     checks = [
@@ -289,7 +293,6 @@ def collect_checks(
         package_check(),
         gpu_check(requested_device, runtime),
         executable_check("ffmpeg", required=False),
-        tailscale_check(),
         cache_check(
             project_root,
             model=model,
@@ -297,6 +300,8 @@ def collect_checks(
         ),
         port_check(port, model),
     ]
+    if not local_only:
+        checks.insert(-1, tailscale_check())
     if peer:
         checks.insert(-1, peer_check(peer))
     if deep and runtime is not None:
@@ -306,6 +311,9 @@ def collect_checks(
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.local_only and args.peer:
+        print("error: --peer cannot be used with --local-only", file=sys.stderr)
+        return 2
     if not 1 <= args.port <= 65535:
         print("error: port must be between 1 and 65535", file=sys.stderr)
         return 2
@@ -329,6 +337,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         peer=args.peer,
         port=args.port,
         language=args.language,
+        local_only=args.local_only,
     )
     for check in checks:
         print(f"[{check.status}] {check.name}: {check.detail}")

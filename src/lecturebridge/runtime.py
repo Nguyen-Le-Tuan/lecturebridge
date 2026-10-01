@@ -7,6 +7,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import sysconfig
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from importlib import import_module
@@ -15,6 +16,31 @@ from pathlib import Path
 CUDA_READY_ENV = "LECTUREBRIDGE_CUDA_RUNTIME_READY"
 DEVICE_CHOICES = ("auto", "cuda", "cpu")
 WINDOWS_CUDA_DLLS = ("cublas64_12.dll", "cudnn64_9.dll", "cudnn_ops64_9.dll")
+_DLL_HANDLES: list[object] = []
+
+
+def windows_cuda_library_dirs() -> list[Path]:
+    """Find optional NVIDIA wheels in this venv, without loading GPU libraries."""
+    root = Path(sysconfig.get_path("purelib")) / "nvidia"
+    return [
+        path
+        for name in ("cublas", "cudnn", "cuda_nvrtc")
+        if (path := root / name / "bin").is_dir()
+    ]
+
+
+def prepare_windows_cuda() -> None:
+    """Use private runtime DLLs only in this process; never edit system PATH."""
+    directories = windows_cuda_library_dirs()
+    if not directories:
+        return
+    prefixes = [str(path) for path in directories]
+    old = os.environ.get("PATH", "").split(os.pathsep)
+    os.environ["PATH"] = os.pathsep.join(
+        prefixes + [p for p in old if p not in prefixes]
+    )
+    if hasattr(os, "add_dll_directory"):
+        _DLL_HANDLES.extend(os.add_dll_directory(str(path)) for path in directories)
 
 
 @dataclass(frozen=True)
@@ -72,6 +98,7 @@ def nvidia_smi_detail() -> tuple[bool, str]:
         capture_output=True,
         check=False,
         text=True,
+        timeout=5,
     )
     detail = result.stdout.strip() or result.stderr.strip() or "no GPU reported"
     return result.returncode == 0, detail
@@ -81,12 +108,12 @@ def windows_cuda_dll_status(
     environ: Mapping[str, str] | None = None,
 ) -> tuple[bool, str]:
     """Check that Faster-Whisper's required CUDA DLLs are visible on Windows."""
-    environment = environ or os.environ
+    environment = os.environ if environ is None else environ
     directories = [
-        Path(item)
-        for item in environment.get("PATH", "").split(os.pathsep)
-        if item
+        Path(item) for item in environment.get("PATH", "").split(os.pathsep) if item
     ]
+    if environ is None:
+        directories = windows_cuda_library_dirs() + directories
     missing = [
         filename
         for filename in WINDOWS_CUDA_DLLS
@@ -103,7 +130,10 @@ def cuda_prerequisites(
     environ: Mapping[str, str] | None = None,
 ) -> tuple[bool, str]:
     """Report whether this host has the NVIDIA runtime required by CTranslate2."""
-    gpu_ready, gpu_detail = nvidia_smi_detail()
+    try:
+        gpu_ready, gpu_detail = nvidia_smi_detail()
+    except (OSError, subprocess.SubprocessError) as exc:
+        return False, f"NVIDIA driver check failed: {type(exc).__name__}"
     if not gpu_ready:
         return False, gpu_detail
 
@@ -171,6 +201,8 @@ def ensure_runtime(
     compute_type: str = "auto",
 ) -> RuntimeSelection:
     """Select a device and prepare its process environment."""
+    if platform.system() == "Windows":
+        prepare_windows_cuda()
     ready, detail = cuda_prerequisites()
     selection = choose_runtime(
         requested_device,

@@ -1,62 +1,73 @@
 # Troubleshooting
 
-## `nvidia-smi` is not found
+## Setup stopped or a download failed
 
-Install or repair the NVIDIA display driver, then open a new terminal. Use
-`--device cpu --model tiny.en` if the computer has no NVIDIA GPU.
+Read the final error and `.lecturebridge/setup.log`, check internet access/free
+space, then run Install again. Downloads are verified; never skip a checksum
+failure or manually mark an incomplete setup ready. Use a permanent writable
+local folder. Do not copy `.venv` from another computer or OS.
 
-## Windows reports a missing CUDA DLL
+## Windows requests administrator permission or a restart
 
-LectureBridge requires `cublas64_12.dll`, `cudnn64_9.dll`, and
-`cudnn_ops64_9.dll` on `PATH`. Install CUDA Toolkit 12 and cuDNN 9 from NVIDIA,
-then restart PowerShell. `nvidia-smi` showing a GPU is not sufficient by itself.
+The Microsoft Visual C++ runtime requires administrator approval when missing.
+Its installer signature is verified before execution. If it requests a restart,
+LectureBridge stops setup; restart yourself and rerun Install. No automatic
+reboot or GPU driver installation is performed.
 
-## Linux reports missing CUDA runtime packages
+## No NVIDIA GPU or missing CUDA DLLs
 
-Run:
+CPU-only computers are supported. Select `-Profile cpu` in Windows Install or
+`--profile cpu` in Ubuntu Install to use multilingual `tiny` on CPU.
 
-```bash
-uv sync --locked
-uv run lecturebridge-preflight --device cuda --deep
-```
+For GPU use, rerun the installer while the GPU is idle and cool. Eligible
+Windows installations receive private cuBLAS/cuDNN wheels; the app locates their
+DLLs without system PATH changes. A manually managed developer environment
+needs `uv sync --locked --extra windows-cuda` on Windows. A working NVIDIA
+display driver is still required. `nvidia-smi` alone does not prove CUDA
+execution works; the Start launcher uses a bounded tiny check before its first
+GPU launch. A failed check falls back to CPU for that session.
 
-The project adds its pip-installed cuBLAS/cuDNN directories to
-`LD_LIBRARY_PATH` exactly once before starting Python.
+Linux runtime packages are part of the locked dependencies. The app adds their
+library paths to the child process before using CUDA. Do not install a global
+CUDA Toolkit merely to work around an incomplete application setup.
 
 ## Model verification fails
 
-Do not edit a cached model. Remove only the named corrupted Hugging Face
-snapshot, then download it again:
+Rerun Install to download and verify the selected ASR model. Advanced users can
+use the installed Python with `-m lecturebridge.model_store download --model tiny`
+(or the affected model name). Repository revisions, file sizes, and SHA-256
+checksums are pinned in `models.lock.json`. Do not edit cached model files.
 
-```bash
-uv run lecturebridge-models download --model distil-large-v3.5
-uv run lecturebridge-models verify --model distil-large-v3.5
-```
+## GPU memory pressure or slow CPU
 
-The repository, revision, size, and SHA-256 values are defined in
-`models.lock.json`.
+Stop the server first. Try multilingual `small`, then `base`, then `tiny`; for
+a CPU baseline rerun Install with the CPU profile. Start with 15–30 seconds of
+speech and translation disabled. Do not run a large-model stress test as a
+recovery step. The live server has no thermal watchdog.
 
-## GPU runs out of memory
-
-Stop the server and retry models in this order:
-
-```bash
-uv run lecturebridge-live --model small.en
-uv run lecturebridge-live --model base.en
-uv run lecturebridge-live --model tiny.en
-```
-
-Translation is forced to CPU to reserve VRAM for English ASR. Disable
-translation first when diagnosing memory pressure.
+CPU fallback is for compatibility and does not guarantee real-time captions.
+NLLB translation runs on CPU independently of the ASR device, so a faster GPU
+will not directly fix translation latency. Measure captions and translation
+separately.
 
 ## Preflight fails only on Tailscale
 
-Confirm that Tailscale is installed, signed in, and online on both devices.
-On Windows, run `tailscale serve` from an Administrator terminal. On Linux,
-the first Serve configuration may require administrative approval.
+For use on the same computer, pass `--local-only`. The Install/Start workflow
+already does this. For a phone/tablet, sign in to Tailscale on both devices and
+follow the [classroom runbook](classroom-runbook.md). Do not expose port 8000
+publicly.
 
-## CPU fallback is too slow
+## Browser does not open or port 8000 is occupied
 
-Use `tiny.en` or `base.en`, connect power, close other CPU-heavy programs, and
-measure with a permitted recording. CPU fallback provides compatibility, not a
-guaranteed real-time classroom target.
+Keep the terminal open and read its error. After it reports server startup,
+open `http://127.0.0.1:8000` yourself if browser auto-open was unavailable. Close
+any previous server before starting a new one. Allow browser microphone access.
+For a remote phone/tablet, microphone capture requires the HTTPS tailnet URL.
+
+## Language or translation is wrong
+
+Close the server and rerun Start with `--language en`, `zh`, `zh-Hant`, `ja`, or
+`ko`. English-only `.en` and `distil-large-v3.5` models are rejected for other
+languages. Use multilingual models for Chinese/Japanese/Korean. Translation
+only receives newly committed text after it is enabled; it does not backfill
+the entire earlier transcript. The app's UI language remains Vietnamese.

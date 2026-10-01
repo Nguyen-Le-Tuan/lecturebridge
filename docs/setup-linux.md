@@ -1,70 +1,48 @@
-# Linux setup
+# Ubuntu setup
 
-LectureBridge supports x86-64 Ubuntu/Linux with Python 3.12. NVIDIA GPU
-inference requires a working driver; project dependencies provide the CUDA 12
-cuBLAS and cuDNN 9 runtime libraries.
-
-## 1. Install system prerequisites
-
-Install Git, curl, Tailscale, and optionally FFmpeg. FFmpeg is not required for
-the default browser PCM path, but it is useful for diagnostics and other audio
-inputs. Confirm the NVIDIA driver when GPU inference is expected:
+Use Ubuntu 22.04/24.04 x86-64. Extract the Ubuntu bundle from the project owner or
+a successful CI run into a permanent writable directory. Open a terminal there:
 
 ```bash
-nvidia-smi
+bash Install.sh
+bash Start.sh
 ```
 
-Do not install Python packages globally and do not copy `.venv` from another
-computer.
+No Git or system Python installation is needed. Setup downloads private
+uv/Python and locked application dependencies. It installs missing `curl`,
+`ca-certificates`, and `libgomp1` through apt; `sudo` may request your password.
+GPU drivers are not installed or modified. Private Linux CUDA runtime packages
+are included in the locked dependencies even on a CPU-only installation.
 
-## 2. Clone and bootstrap
+See [the main installation guide](../README.md#install-on-a-new-computer) for
+hardware selection, downloads, languages, and model commands. Ubuntu derivatives
+may work; other Linux distributions require their own prerequisite setup.
+
+To force CPU and choose Japanese:
 
 ```bash
-git clone --branch ubuntu/local-studio https://github.com/Nguyen-Le-Tuan/lecturebridge.git
-cd lecturebridge
-bash scripts/bootstrap-linux.sh
+bash Install.sh --profile cpu --language ja
+bash Start.sh
 ```
 
-The script installs `uv` when missing, creates `.venv`, performs a locked
-dependency sync, downloads the pinned default model, verifies its SHA-256
-checksums, and runs preflight.
-
-If Tailscale has not been authenticated yet, sign in and rerun:
+To change source language later, close the server, then run:
 
 ```bash
-uv run lecturebridge-preflight --device auto
+bash Start.sh --language zh
 ```
 
-For a conservative first test, follow [the bounded tiny.en check](windows-test-handoff-vi.md).
-The following deep preflight uses the larger default model and should wait until
-that first test passes.
+## Recovery
 
-## 3. Prove GPU inference
+- Read `.lecturebridge/setup.log` if setup fails. Rerun `bash Install.sh` after
+  fixing the reported problem; valid downloads are reused.
+- A failed or interrupted setup blocks Start until Install completes.
+- Run as your ordinary user; let sudo handle only system packages.
+- Keep the extracted folder in place. Do not share its `.venv` with Windows.
+- Close any existing server on port 8000 before starting another.
+- A missing, warm, or unavailable NVIDIA GPU selects CPU. Use `--profile cpu`
+  to avoid GPU inference completely.
+- Install updates in a separate extracted folder. Recordings remain under
+  `${XDG_DATA_HOME:-~/.local/share}/lecturebridge` until explicitly deleted.
 
-`nvidia-smi` only proves that the driver can see the GPU. Run the deep test to
-load CTranslate2, cuBLAS, cuDNN, and the model:
-
-```bash
-uv run lecturebridge-preflight --device cuda --deep
-```
-
-Every required line must report `PASS`. A missing CUDA package is repaired by
-rerunning `uv sync --locked`; do not manually copy `.so` files into the repo.
-
-## 4. Start LectureBridge
-
-```bash
-uv run lecturebridge-live --device auto
-```
-
-Open <http://127.0.0.1:8000>. For a mobile microphone, continue with the
-[classroom runbook](classroom-runbook.md).
-
-## CPU-only mode
-
-```bash
-uv run lecturebridge-live --device cpu --model tiny.en
-```
-
-CPU mode uses `int8`. It is intended as a compatibility fallback and may not
-meet real-time latency targets with the default large model.
+Tailscale is optional for localhost use. Follow the classroom runbook only if
+connecting a phone/tablet. The app UI remains Vietnamese.

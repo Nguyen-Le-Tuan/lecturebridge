@@ -67,3 +67,19 @@ def test_windows_cuda_dll_check_uses_path(tmp_path: Path) -> None:
 
     assert ready
     assert "available" in detail
+
+
+def test_windows_private_cuda_dirs_are_detected_without_import(monkeypatch, tmp_path):
+    from lecturebridge import runtime
+
+    monkeypatch.setattr(runtime.sysconfig, "get_path", lambda name: str(tmp_path))
+    cublas = tmp_path / "nvidia/cublas/bin"
+    cudnn = tmp_path / "nvidia/cudnn/bin"
+    cublas.mkdir(parents=True)
+    cudnn.mkdir(parents=True)
+    (cublas / "cublas64_12.dll").touch()
+    for name in ("cudnn64_9.dll", "cudnn_ops64_9.dll"):
+        (cudnn / name).touch()
+    assert runtime.windows_cuda_library_dirs() == [cublas, cudnn]
+    assert runtime.windows_cuda_dll_status()[0]
+    assert not runtime.windows_cuda_dll_status({"PATH": ""})[0]

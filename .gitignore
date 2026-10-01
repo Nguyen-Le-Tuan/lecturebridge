@@ -1,4 +1,6 @@
 .venv/
+.tools/
+.lecturebridge/
 __pycache__/
 *.py[cod]
 .env
