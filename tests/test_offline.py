@@ -24,12 +24,18 @@ def test_distil_large_v35_is_default() -> None:
 
 
 def test_debate_and_fallback_models_are_supported() -> None:
-    assert SUPPORTED_MODELS == (
+    assert {
         "distil-large-v3.5",
         "small.en",
         "base.en",
         "tiny.en",
-    )
+        "tiny",
+        "base",
+        "small",
+        "medium",
+        "large-v3-turbo",
+        "large-v3",
+    } == set(SUPPORTED_MODELS)
 
 
 def test_calculate_rtf() -> None:

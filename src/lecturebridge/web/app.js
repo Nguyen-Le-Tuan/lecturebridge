@@ -15,7 +15,7 @@ const preferences = {
     }
   },
 };
-let mode = "en",
+let mode = "source",
   segments = [],
   phase = "idle",
   socket,
@@ -150,20 +150,25 @@ function setPhase(value, text) {
   for (const id of ["saveRecording", "sessionTitle", "microphoneSelect"])
     $(id).disabled = value !== "idle";
 }
+function applySourceLanguage(info) {
+  const label = info.language_label || "Tiếng Anh";
+  $("sourceMode").textContent = label;
+  $("sourceInfo").textContent = `Nguồn: ${label} → Dịch: Tiếng Việt`;
+}
 function updateTranslationNotice() {
   const texts = {
     idle: "Bản dịch sẽ bắt đầu với phần nói mới khi bạn bắt đầu phiên.",
     loading:
-      "Đang chuẩn bị bộ dịch trên CPU. Transcript tiếng Anh vẫn tiếp tục.",
-    downloading: "Đang tải bộ dịch. Bạn vẫn có thể đọc transcript tiếng Anh.",
+      "Đang chuẩn bị bộ dịch trên CPU. Transcript bản gốc vẫn tiếp tục.",
+    downloading: "Đang tải bộ dịch. Bạn vẫn có thể đọc transcript bản gốc.",
     missing: `Cần tải bộ dịch local (~${((capabilities.translation?.download_bytes || 2500000000) / 1e9).toFixed(1)} GB). NLLB chỉ dành cho mục đích phi thương mại.`,
     ready:
-      "Dịch phần nói mới · CPU local. Các đoạn trước khi bật dịch được giữ bằng tiếng Anh.",
+      "Dịch phần nói mới · CPU local. Các đoạn trước khi bật dịch được giữ bằng ngôn ngữ nguồn.",
     error:
-      "Bộ dịch chưa hoạt động. Transcript tiếng Anh vẫn tiếp tục; thử lại bằng nút chế độ đọc.",
+      "Bộ dịch chưa hoạt động. Transcript bản gốc vẫn tiếp tục; thử lại bằng nút chế độ đọc.",
     off: "Bộ dịch đang tắt.",
   };
-  $("translationNotice").hidden = mode === "en";
+  $("translationNotice").hidden = mode === "source";
   $("translationText").textContent = texts[translationState] || texts.idle;
   $("downloadTranslation").hidden = !["missing", "error"].includes(
     translationState,
@@ -173,18 +178,18 @@ function updateTranslationNotice() {
 }
 for (const button of document.querySelectorAll("[data-mode]"))
   button.onclick = () => {
-    const wasEnabled = mode !== "en";
+    const wasEnabled = mode !== "source";
     mode = button.dataset.mode;
     for (const item of document.querySelectorAll("[data-mode]"))
       item.setAttribute("aria-pressed", String(item === button));
     if (
       phase === "listening" &&
-      (wasEnabled !== (mode !== "en") || translationState === "error")
+      (wasEnabled !== (mode !== "source") || translationState === "error")
     ) {
       socket.send(
-        JSON.stringify({ type: "translation", enabled: mode !== "en" }),
+        JSON.stringify({ type: "translation", enabled: mode !== "source" }),
       );
-      translationState = mode === "en" ? "off" : "loading";
+      translationState = mode === "source" ? "off" : "loading";
     }
     updateTranslationNotice();
     renderTranscript();
@@ -227,9 +232,9 @@ function lineNode(segment, playback = false) {
     copy.append(p);
   };
   if (playback || mode !== "vi" || !segment.translation) add(segment.text);
-  if ((playback || mode !== "en") && segment.translation)
+  if ((playback || mode !== "source") && segment.translation)
     add(segment.translation, "translation");
-  else if (!playback && mode !== "en") {
+  else if (!playback && mode !== "source") {
     const labels = {
       pending: "Đang chờ bản dịch…",
       off: "Chưa dịch · đoạn trước khi bật dịch",
@@ -362,12 +367,13 @@ async function start() {
           type: "start",
           save: $("saveRecording").checked,
           title: $("sessionTitle").value.trim() || "Bài giảng mới",
-          translation: mode !== "en",
+          translation: mode !== "source",
         }),
       );
     socket.onmessage = ({ data }) => {
       const event = JSON.parse(data);
       if (event.type === "config") {
+        applySourceLanguage(event);
         clearTimeout(connecting);
         segments = [];
         $("partialText").textContent = "";
@@ -627,6 +633,7 @@ $("confirmDelete").onclick = async () => {
 async function checkCapabilities() {
   try {
     capabilities = await api("/api/capabilities");
+    applySourceLanguage(capabilities);
     $("modelInfo").textContent =
       `ASR: ${capabilities.model} · Dịch: CPU · Thư viện: laptop · Phiên tối đa 2 giờ`;
     if (
@@ -639,7 +646,7 @@ async function checkCapabilities() {
       if (
         translationState === "ready" &&
         phase === "listening" &&
-        mode !== "en"
+        mode !== "source"
       )
         socket.send(JSON.stringify({ type: "translation", enabled: true }));
     }

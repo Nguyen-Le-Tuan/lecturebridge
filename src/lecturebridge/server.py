@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from filelock import FileLock
 
+from lecturebridge.languages import source_language
 from lecturebridge.storage import Library, Recorder, default_data_dir
 from lecturebridge.transcript import Transcript, export_text
 from lecturebridge.translation import TranslationService
@@ -43,7 +44,9 @@ def create_app(
     translator=None,
     translation_default: bool = False,
 ) -> FastAPI:
-    service = translator or TranslationService()
+    language = getattr(backend, "language", "en")
+    language_profile = source_language(language)
+    service = translator or TranslationService(language)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -103,6 +106,8 @@ def create_app(
             "busy": app.state.busy,
             "max_session_seconds": MAX_SESSION_SECONDS,
             "model": getattr(backend, "model", "test"),
+            "language": language,
+            "language_label": language_profile.label,
             "storage": "local",
         }
 
@@ -194,7 +199,7 @@ def create_app(
         legacy = socket.url.path == "/asr"
         processor = None
         recorder = None
-        transcript = Transcript()
+        transcript = Transcript(language=language)
         send_lock = asyncio.Lock()
         updates_lock = asyncio.Lock()
         recording_lock = asyncio.Lock()
@@ -367,6 +372,8 @@ def create_app(
                     "useAudioWorklet": True,
                     "sample_rate": 16000,
                     "recording_id": recorder.id if recorder else None,
+                    "language": language,
+                    "language_label": language_profile.label,
                 }
             )
             translation_task = asyncio.create_task(translation_loop())

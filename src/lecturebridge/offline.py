@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from time import perf_counter
 
+from lecturebridge.languages import LANGUAGES, source_language, validate_model_language
 from lecturebridge.model_store import model_directory
 from lecturebridge.models import DEFAULT_MODEL, SUPPORTED_MODELS
 from lecturebridge.runtime import DEVICE_CHOICES, ensure_runtime
@@ -60,8 +61,10 @@ def transcribe_audio(
     device: str = "cuda",
     compute_type: str = "int8_float16",
     beam_size: int = 5,
+    language: str = "en",
 ) -> TranscriptionResult:
-    """Transcribe an English audio file and collect baseline timings."""
+    """Transcribe a source-language audio file and collect baseline timings."""
+    validate_model_language(model_name, language)
     from faster_whisper import WhisperModel
 
     if not audio_path.is_file():
@@ -76,7 +79,7 @@ def transcribe_audio(
     inference_started = perf_counter()
     segment_stream, info = model.transcribe(
         str(audio_path),
-        language="en",
+        language=source_language(language).whisper,
         beam_size=beam_size,
         vad_filter=True,
     )
@@ -130,7 +133,7 @@ def render_human(result: TranscriptionResult) -> str:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Transcribe a private English audio file on the local GPU."
+        description="Transcribe a private audio file in the selected source language."
     )
     parser.add_argument("audio", type=Path, help="Path to a permitted audio file")
     parser.add_argument(
@@ -138,6 +141,9 @@ def build_parser() -> argparse.ArgumentParser:
         choices=SUPPORTED_MODELS,
         default=DEFAULT_MODEL,
         help=f"Whisper model to benchmark (default: {DEFAULT_MODEL})",
+    )
+    parser.add_argument(
+        "--language", choices=tuple(LANGUAGES), default="en", help="Spoken language"
     )
     parser.add_argument(
         "--device",
@@ -167,6 +173,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        validate_model_language(args.model, args.language)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    try:
         runtime = ensure_runtime(args.device, compute_type=args.compute_type)
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -182,6 +193,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             device=runtime.device,
             compute_type=runtime.compute_type,
             beam_size=args.beam_size,
+            language=args.language,
         )
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)

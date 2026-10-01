@@ -114,9 +114,7 @@ def model_directory(
                 return local_target
             if not download:
                 joined = "; ".join(failures)
-                raise RuntimeError(
-                    f"model integrity check failed for {name}: {joined}"
-                )
+                raise RuntimeError(f"model integrity check failed for {name}: {joined}")
 
     try:
         directory = Path(snapshot_download(**kwargs, local_files_only=True))
@@ -169,9 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     for command in ("download", "verify"):
         child = subparsers.add_parser(command)
-        child.add_argument(
-            "--model", choices=SUPPORTED_MODELS, default=DEFAULT_MODEL
-        )
+        child.add_argument("--model", choices=SUPPORTED_MODELS, default=DEFAULT_MODEL)
         child.add_argument("--translation", action="store_true")
         child.add_argument("--all", action="store_true")
         child.add_argument("--cache-dir", type=Path)
@@ -183,7 +179,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     locked = load_locked_models()
     if args.command == "list":
-        for model in locked.values():
+        for model in sorted(
+            locked.values(),
+            key=lambda item: (
+                item.kind != "asr",
+                sum(f.size for f in item.files.values()),
+            ),
+        ):
             print(
                 f"{model.name}\t{model.kind}\t{model.repository}@{model.revision}"
                 f"\tlicense={model.license}"

@@ -7,6 +7,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from lecturebridge.languages import LANGUAGES, source_language, validate_model_language
 from lecturebridge.model_store import TRANSLATION_MODEL, model_directory
 from lecturebridge.models import DEFAULT_MODEL, SUPPORTED_MODELS
 from lecturebridge.runtime import DEVICE_CHOICES, ensure_runtime
@@ -37,8 +38,10 @@ def build_wlk_command(
     model_dir: Path | None,
     port: int,
     translation_enabled: bool,
+    language: str = "en",
 ) -> list[str]:
     """Build the pinned, local-only WhisperLiveKit command."""
+    validate_model_language(model, language)
     command = [
         executable,
         "serve",
@@ -53,7 +56,7 @@ def build_wlk_command(
         "--model",
         model,
         "--lan",
-        "en",
+        source_language(language).whisper,
         "--pcm-input",
         "--pause-segmentation-seconds",
         "1.2",
@@ -80,13 +83,19 @@ def build_wlk_command(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run high-accuracy local English live captions."
+        description="Run local captions with optional Vietnamese translation."
     )
     parser.add_argument(
         "--model",
         choices=SUPPORTED_MODELS,
         default=DEFAULT_MODEL,
         help=f"ASR model (default: {DEFAULT_MODEL})",
+    )
+    parser.add_argument(
+        "--language",
+        choices=tuple(LANGUAGES),
+        default="en",
+        help="Spoken source language; non-English requires a multilingual model",
     )
     parser.add_argument(
         "--device",
@@ -98,12 +107,12 @@ def build_parser() -> argparse.ArgumentParser:
     translation.add_argument(
         "--translation",
         action="store_true",
-        help="Opt in to English-to-Vietnamese translation on CPU",
+        help="Opt in to source-language-to-Vietnamese translation on CPU",
     )
     translation.add_argument(
         "--no-translation",
         action="store_true",
-        help="Deprecated compatibility alias; English-only is already the default",
+        help="Deprecated compatibility alias; source-only captions are already the default",
     )
     parser.add_argument(
         "--port", type=int, default=8000, help="Loopback port (default: 8000)"
@@ -118,6 +127,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if not 1 <= args.port <= 65535:
         print("error: port must be between 1 and 65535", file=sys.stderr)
+        return 2
+
+    try:
+        validate_model_language(args.model, args.language)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 2
 
     try:
@@ -138,7 +153,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.no_translation:
         print(
-            "warning: --no-translation is deprecated; English-only is now the default",
+            "warning: --no-translation is deprecated; source-only captions are the default",
             file=sys.stderr,
         )
 
@@ -148,7 +163,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     from lecturebridge.server import create_app
 
     app = create_app(
-        WLKBackend(args.model, asr_model_dir, runtime),
+        WLKBackend(args.model, asr_model_dir, runtime, language=args.language),
         data_dir=args.data_dir,
         translation_default=args.translation,
     )

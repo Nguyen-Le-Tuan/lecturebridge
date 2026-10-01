@@ -1172,3 +1172,9 @@ dialog p {
     gap: 10px;
   }
 }
+/* Source language is fixed for one server run; read mode can change live. */
+.source-info {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
