@@ -1,7 +1,7 @@
 # Phone/tablet classroom runbook
 
 Complete Install and a short local microphone test first. For initial
-acceptance, use the [README checklist](../README.md#short-acceptance-check).
+acceptance, use the [testing guide](testing.md).
 
 ## Prepare the connection
 
@@ -24,8 +24,7 @@ acceptance, use the [README checklist](../README.md#short-acceptance-check).
 
 Local computer use does not require Tailscale. Phone/tablet use needs HTTPS for
 microphone permission. The computer must stay on for captions and library access.
-Anyone allowed to reach this instance can access its library; this is a trusted
-single-instance tool, not a service with separate user accounts.
+Anyone allowed to reach this instance can access its library; the current app uses one shared library.
 
 ## Start and verify
 
@@ -40,7 +39,7 @@ single-instance tool, not a service with separate user accounts.
 
 Place the microphone near the speakers, uncovered, away from fans and keyboards.
 One mono microphone cannot reliably recover overlapping speech. Speaker
-separation is not included. Do not rely on captions as an authoritative record.
+separation is not included. Do not rely on captions as an exact record of what was said.
 
 ## Stop and recover
 

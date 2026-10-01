@@ -28,8 +28,7 @@ execution works; the Start launcher uses a bounded tiny check before its first
 GPU launch. A failed check falls back to CPU for that session.
 
 Linux runtime packages are part of the locked dependencies. The app adds their
-library paths to the child process before using CUDA. Do not install a global
-CUDA Toolkit merely to work around an incomplete application setup.
+library paths to the child process before using CUDA. Rerun Install to restore missing application libraries.
 
 ## Model verification fails
 
@@ -45,7 +44,7 @@ a CPU baseline rerun Install with the CPU profile. Start with 15–30 seconds of
 speech and translation disabled. Do not run a large-model stress test as a
 recovery step. The live server has no thermal watchdog.
 
-CPU fallback is for compatibility and does not guarantee real-time captions.
+CPU mode may fall behind live speech, particularly with larger models.
 NLLB translation runs on CPU independently of the ASR device, so a faster GPU
 will not directly fix translation latency. Measure captions and translation
 separately.

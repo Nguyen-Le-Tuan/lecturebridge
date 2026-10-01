@@ -1,36 +1,57 @@
-# Public release checklist
+# Release checklist
 
-Keep the GitHub repository private until every required item is complete.
+Use a pre-release for builds that still need feedback from testers. A release
+tag identifies the exact source commit used to build the downloadable archives.
+A GitHub Release inherits the repository's visibility; creating one does not
+make a private repository public.
 
-## Repository safety
+## Prepare an alpha release
 
-- [ ] Create and verify an offline `git bundle --all` backup.
-- [ ] Rewrite the personal author/committer email to the GitHub noreply address
-      across every branch and tag.
-- [ ] Confirm the old email is absent from `git log --all`.
-- [ ] Run `uv run python scripts/check_repository.py` after staging all files.
-- [ ] Inspect `git diff --cached --stat` and confirm no model, audio, transcript,
-      credential, local cache, or file larger than 10 MiB is present.
-- [ ] Verify a fresh clone can run `uv sync --locked` without local paths.
+- [ ] Merge the intended changes into `main` through the normal CI checks.
+- [ ] Confirm Windows and Ubuntu jobs pass for the selected commit.
+- [ ] Review setup instructions, known issues, and the testing guide.
+- [ ] Run the repository guard and inspect the files included in each bundle.
+- [ ] Build or download the Windows ZIP, Ubuntu TAR.GZ, and `SHA256SUMS.txt`.
+- [ ] Check archive hashes and confirm `BUILD_INFO.json` names the selected commit.
+- [ ] Use a version such as `v0.1.0-alpha.1` and mark the release as a pre-release.
+- [ ] Attach both installer archives and the checksum file.
+- [ ] Write release notes covering changes, installation, known limitations,
+      and which checks have been completed.
+- [ ] Give testers the matching report template and ask them to record the version.
 
-## Quality gates
+Archive contents should include code and documentation only. Models download
+during setup; recordings, transcripts, credentials, local reports, and virtual
+environments stay out of release assets. GitHub's automatically generated source
+archives are separate from the installer bundles.
 
-- [ ] Linux CI passes lint, tests, build, repository guard, and Bash syntax.
-- [ ] Windows CI passes lint, tests, build, repository guard, and PowerShell syntax.
-- [ ] Linux NVIDIA deep preflight passes on trusted hardware.
-- [ ] Windows NVIDIA deep preflight passes on trusted hardware.
-- [ ] Windows CPU fallback runs with `tiny.en` when CUDA is hidden or absent.
-- [ ] Default model downloads and verifies from an empty Hugging Face cache.
-- [ ] The application runs offline after the verified download.
-- [ ] Tailscale Serve HTTPS works from an iPhone/iPad on both host platforms.
+Keep published tags and their assets tied to the original build. If a fix changes
+what testers receive, publish the next version rather than silently replacing it.
 
-## GitHub publication
+## Before a stable release
 
-- [ ] Update rewritten `main` only with `--force-with-lease` while private.
-- [ ] Push `chore/bootstrap` and open the cross-platform bootstrap pull request.
-- [ ] Merge with a merge commit so the reviewed atomic commits remain visible.
-- [ ] Enable branch protection: required CI and review, no deletion, no force-push.
-- [ ] Enable private vulnerability reporting and public secret scanning.
-- [ ] Change visibility to public only after a final owner review.
-- [ ] Tag `v0.1.0` only after both physical GPU acceptance runs pass.
-- [ ] Release source archives only; never attach model weights or private audio.
+- [ ] Complete fresh-machine setup on Windows and Ubuntu.
+- [ ] Verify CPU fallback and a bounded tiny GPU check on each supported platform.
+- [ ] Test the selected larger models separately on suitable hardware.
+- [ ] Verify downloads and checksums from an empty model cache.
+- [ ] Check offline operation after the required models are cached.
+- [ ] Complete microphone, recording, playback, export, deletion, and restart checks.
+- [ ] Record actual transcription and translation quality for supported languages.
+- [ ] Test physical Safari/iPad access through Tailscale HTTPS.
+- [ ] Document remaining limitations with enough detail for users to decide
+      whether the release suits their needs.
+
+Longer-session testing is a separate acceptance step after short sessions are
+stable. The [test history](test-evidence.md) records earlier results; a CI pass
+or tiny smoke test alone does not establish classroom reliability.
+
+## Before making the repository public
+
+- [ ] Review tracked files and Git history for private data and credentials.
+- [ ] Review author metadata and decide whether any personal details need removal.
+- [ ] Back up all branches and tags before any necessary history rewrite.
+- [ ] Check source, dependency, and model licensing; keep NLLB out of commercial use.
+- [ ] Confirm branch protection, required CI, and vulnerability-reporting settings.
+- [ ] Review visibility and access with the repository owner before changing them.
+
+History rewriting and visibility changes are separate maintenance operations;
+ordinary alpha releases do not require them.
