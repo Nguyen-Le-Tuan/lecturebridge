@@ -14,6 +14,16 @@
 </p>
 
 <p align="center">
+  <strong>Language:</strong>
+  <a href="docs/getting-started.md">English</a> |
+  <a href="docs/i18n/getting-started.vi.md">Tiếng Việt</a> |
+  <a href="docs/i18n/getting-started.zh-Hans.md">简体中文</a> |
+  <a href="docs/i18n/getting-started.zh-Hant.md">繁體中文</a> |
+  <a href="docs/i18n/getting-started.ja.md">日本語</a> |
+  <a href="docs/i18n/getting-started.ko.md">한국어</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/Nguyen-Le-Tuan/lecturebridge/releases"><strong>Download</strong></a>
   &nbsp; · &nbsp; <a href="#studio-preview">Studio preview</a>
   &nbsp; · &nbsp; <a href="docs/models.md">Model guide</a>
@@ -40,6 +50,10 @@ Tailscale HTTPS. Speech recognition and translation run on your computer.
 | Live captions in English, Mandarin, Japanese, or Korean. | Original text, Vietnamese, or both in the same reading view. | Optional audio recording, playback, and WAV/TXT/JSON export. |
 
 ## Download and install
+
+New to local speech tools? Start with the [step-by-step setup guide](docs/getting-started.md),
+available in the six languages linked above. These links change the guide
+language; the app's speech and translation settings are selected separately.
 
 Get the Windows ZIP or Ubuntu archive from
 [Releases](https://github.com/Nguyen-Le-Tuan/lecturebridge/releases).

@@ -38,6 +38,13 @@ FILES = {
     "CONTRIBUTING.md",
     "SECURITY.md",
     "docs/installation.md",
+    "docs/getting-started.md",
+    "docs/i18n/getting-started.vi.md",
+    "docs/i18n/getting-started.zh-Hans.md",
+    "docs/i18n/getting-started.zh-Hant.md",
+    "docs/i18n/getting-started.ja.md",
+    "docs/i18n/getting-started.ko.md",
+
     "docs/models.md",
     "docs/how-it-works.md",
     "docs/testing.md",

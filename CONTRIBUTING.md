@@ -60,7 +60,13 @@ Write for the person using or maintaining the project. Explain the task, give
 the command or steps, and describe the result they should expect. Keep README
 focused on getting started; put detailed reference material in `docs/`.
 
-Use English for current guides. Describe existing behavior in the present tense
+Keep the main README and reference guides in English. Beginner setup translations
+live in `docs/i18n/`, with `docs/getting-started.md` as their English counterpart.
+Update the language switcher, translated instructions, and installer file allowlist
+when adding a guide. Keep CLI flags and source-language codes unchanged in
+translations, and label links that lead to English reference pages.
+
+Describe existing behavior in the present tense
 and label proposals separately. Avoid assistant-style replies, implementation
 recaps, and claims that haven't been tested. Preserve historical measurements
 and user-submitted reports when editing nearby documentation.
