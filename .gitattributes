@@ -11,3 +11,4 @@
 *.cmd text eol=crlf
 *.pdf binary
 *.bin binary
+*.png binary

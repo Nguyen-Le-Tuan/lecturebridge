@@ -1,4 +1,37 @@
-# LectureBridge
+<a name="lecturebridge"></a>
+
+<p align="center">
+  <img src="docs/assets/lecturebridge-banner.png" alt="LectureBridge — Live captions. On your computer. A sound wave crosses a bridge and becomes lines of text." width="100%">
+</p>
+
+<h1 align="center">LectureBridge</h1>
+
+<p align="center">
+  <a href="https://github.com/Nguyen-Le-Tuan/lecturebridge/releases"><img src="docs/assets/badge-alpha.svg" alt="Alpha release" height="28"></a>
+  <a href="#download-and-install"><img src="docs/assets/badge-platforms.svg" alt="Windows and Ubuntu" height="28"></a>
+  <a href="#recordings-and-privacy"><img src="docs/assets/badge-local.svg" alt="Local processing" height="28"></a>
+  <a href="LICENSE"><img src="docs/assets/badge-license.svg" alt="Source code: MIT license" height="28"></a>
+</p>
+
+<p align="center">
+  <strong>Language:</strong>
+  <a href="docs/getting-started.md">English</a> |
+  <a href="docs/i18n/getting-started.vi.md">Tiếng Việt</a> |
+  <a href="docs/i18n/getting-started.zh-Hans.md">简体中文</a> |
+  <a href="docs/i18n/getting-started.zh-Hant.md">繁體中文</a> |
+  <a href="docs/i18n/getting-started.ja.md">日本語</a> |
+  <a href="docs/i18n/getting-started.ko.md">한국어</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Nguyen-Le-Tuan/lecturebridge/releases"><strong>Download</strong></a>
+  &nbsp; · &nbsp; <a href="#studio-preview">Studio preview</a>
+  &nbsp; · &nbsp; <a href="docs/models.md">Model guide</a>
+  &nbsp; · &nbsp; <a href="docs/testing.md">Testing</a>
+  &nbsp; · &nbsp; <a href="#testing-and-feedback">Feedback</a>
+</p>
+
+---
 
 I'm building LectureBridge to make lectures easier to follow with live captions.
 It transcribes **English, Mandarin Chinese, Japanese, and Korean**, and can
@@ -8,11 +41,19 @@ Run it on a Windows or Ubuntu computer and open the studio in your browser.
 You can use the computer's microphone, or connect an iPhone/iPad through
 Tailscale HTTPS. Speech recognition and translation run on your computer.
 
-LectureBridge is in **alpha**. Short sessions are a good place to start;
-classroom accuracy and longer sessions still need testing. Translation can lag
-by tens of seconds. Recording is off unless you turn it on.
+> **Alpha preview** — Start with a short session. Classroom accuracy and longer
+> sessions still need testing, and translation can lag by tens of seconds.
+> Recording is off unless you turn it on.
+
+| Read along | Translate when needed | Keep what matters |
+| :--- | :--- | :--- |
+| Live captions in English, Mandarin, Japanese, or Korean. | Original text, Vietnamese, or both in the same reading view. | Optional audio recording, playback, and WAV/TXT/JSON export. |
 
 ## Download and install
+
+New to local speech tools? Start with the [step-by-step setup guide](docs/getting-started.md),
+available in the six languages linked above. These links change the guide
+language; the app's speech and translation settings are selected separately.
 
 Get the Windows ZIP or Ubuntu archive from
 [Releases](https://github.com/Nguyen-Le-Tuan/lecturebridge/releases).
@@ -43,6 +84,13 @@ stay in your user data directory.
 
 For installation options and recovery, see the [Windows guide](docs/setup-windows.md)
 or [Ubuntu guide](docs/setup-linux.md).
+
+## Studio preview
+
+<img src="docs/assets/studio-preview.png" alt="LectureBridge studio in bilingual mode, showing English captions and Vietnamese translation with recording controls." width="960">
+
+*The actual studio interface with synthetic demo text from the UI test fixture.
+The interface is currently in Vietnamese; this preview is not an accuracy benchmark.*
 
 ## Your first session
 
@@ -84,6 +132,9 @@ ready to compare them.
 | Japanese | `ja` |
 | Korean | `ko` |
 
+<details>
+<summary><strong>Change the spoken language</strong></summary>
+
 To change languages, close the server and restart it with the new code:
 
 ```powershell
@@ -99,6 +150,9 @@ bash Start.sh --language ja
 Start remembers your choice. `zh-Hant` uses the same Mandarin speech recognizer
 as `zh`; it changes the translation source token and does not guarantee
 Traditional characters in the transcript.
+
+
+</details>
 
 See the [model guide](docs/models.md) for download sizes and commands from
 `tiny.en` through `large-v3`. Chinese, Japanese, and Korean require multilingual
@@ -169,3 +223,11 @@ LectureBridge's source and project documentation use the [MIT License](LICENSE).
 Models and dependencies have their own licenses, listed in
 [third-party notices](THIRD_PARTY_NOTICES.md). The optional NLLB translation
 weights use **CC-BY-NC-4.0** and are restricted to non-commercial use.
+
+---
+
+<p align="center">
+  <a href="https://github.com/Nguyen-Le-Tuan/lecturebridge/releases">Get LectureBridge</a>
+  &nbsp; · &nbsp; <a href="docs/acceptance-report-template.md">Share a test report</a>
+  &nbsp; · &nbsp; <a href="#lecturebridge">Back to top ↑</a>
+</p>
