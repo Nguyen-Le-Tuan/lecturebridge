@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Build committed source bundles (no models)
         run: python3 scripts/build_installers.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: lecturebridge-installers
           path: dist/installers/*
